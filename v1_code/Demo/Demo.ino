@@ -64,71 +64,6 @@ void handleJoystick()
     // sc.move(dir, 1);
 }
 
-// void handleSerialInputComplex()
-// {
-//     if (Serial.available())
-//     {
-//         disable(); enableSteppers = false;
-//         char c, _[2];
-//         Serial.readBytes(&c, 1);
-//         Serial.readBytes(_, 2);
-//         if (c == 'a' || c == 'A')
-//         {
-//             Serial.print("current angle: ");
-//             Serial.println(servoAngle);
-//             while (!Serial.available()) {}
-//             servoAngle = Serial.parseInt();
-//             servo.write(servoAngle);
-//             Serial.print("new angle: ");
-//             Serial.println(servoAngle);
-//         }
-//         else if (c == 's' || c == 'S')
-//         {
-//             Serial.print("current speed (us): ");
-//             Serial.println(WAIT);
-//             while (!Serial.available()) {}
-//             WAIT = Serial.parseInt();
-//             Serial.print("new speed (us): ");
-//             Serial.println(WAIT);
-//         }
-//         Serial.readBytes(_, 2);
-//     }
-// }
-
-// void handleSerialInput()
-// {
-//     if (Serial.available())
-//     {
-//         disable(); enableSteppers = false;
-//         char _[2];
-//         int n = Serial.parseInt();
-//         Serial.readBytes(_, 2);
-//         if (n > 180)
-//         {
-//             Serial.print("old speed (us): ");
-//             Serial.println(WAIT);
-//             WAIT = n;
-//             Serial.print("new speed (us): ");
-//             Serial.println(WAIT);
-//         }
-//         else if (n > 0)
-//         {
-//             Serial.print("old angle: ");
-//             Serial.println(servoAngle);
-//             servoAngle = n;
-//             servo.write(servoAngle);
-//             Serial.print("new angle: ");
-//             Serial.println(servoAngle);
-//         }
-//         else 
-//         {
-//             servoAngle = penDown ? 120 : 140;
-//             servo.write(servoAngle);
-//             penDown = !penDown;
-//         }
-//     }
-// }
-
 void setup() {
   Serial.begin(9600);
   // Steppers
@@ -141,21 +76,7 @@ void setup() {
   // X and Y pins are analog & auto input
 }
 
-void square(int steps)
-{
-    sc.move(UP, steps);
-    sc.move(RIGHT, steps);
-    sc.move(DOWN, steps);
-    sc.move(LEFT, steps);
-}
 
-void diamond(int steps)
-{
-    sc.move(UP + RIGHT, steps);
-    sc.move(DOWN + RIGHT, steps);
-    sc.move(DOWN + LEFT, steps);
-    sc.move(UP + LEFT, steps);
-}
 
 int steps;
 char c[2];
@@ -165,11 +86,19 @@ void loop()
     {
         steps = Serial.parseInt();
         Serial.readBytes(c, 2);
-        Serial.print("Moving ");
-        Serial.print(steps);
-        Serial.println(" steps.");
-        sc.enable();
-        diamond(steps);
-        sc.disable();
+        if (steps < 1)
+        {
+            sc.home();
+        }
+        else 
+        {
+            Serial.print("Moving ");
+            Serial.print(steps);
+            Serial.println(" steps.");
+            sc.enable();
+            sc.square(steps);
+            sc.diamond(steps);
+            sc.disable();
+        }
     }
 }

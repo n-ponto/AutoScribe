@@ -1,10 +1,6 @@
 #include <Arduino.h>
 #include "StepperController.h"
 
-// microseconds to wait between switching signals
-uint32_t wait = 1500;
-bool enabled = false;
-
 StepperController::StepperController()
 {
     Serial.print("Stepper controller initialized.");
@@ -14,6 +10,8 @@ StepperController::StepperController()
     pinMode(DIR_BOT,  OUTPUT);
     pinMode(ENABLE,OUTPUT);
     digitalWrite(ENABLE, HIGH); // disable at the beginning
+    wait = 700;
+    enabled = false;
 }
 
 void StepperController::move(Direction d, uint16_t steps)
@@ -84,7 +82,7 @@ void StepperController::enable()
     } 
 }
 
-void StepperController::disable() 
+void StepperController::disable()
 {
     if (enabled)
     {
@@ -92,5 +90,44 @@ void StepperController::disable()
         enabled = false;
         digitalWrite(ENABLE, HIGH);
     }
-    
+}
+
+void StepperController::square(uint16_t steps)
+{
+    move(UP, steps);
+    move(RIGHT, steps);
+    move(DOWN, steps);
+    move(LEFT, steps);
+}
+
+void StepperController::diamond(uint16_t steps)
+{
+    move(UP + RIGHT, steps);
+    move(DOWN + RIGHT, steps);
+    move(DOWN + LEFT, steps);
+    move(UP + LEFT, steps);
+}
+
+void StepperController::home()
+{
+    disable();
+    char c;
+    while(Serial.available()) { Serial.readBytes(&c, 1); }
+    Serial.print("Move the end to the bottom left and press enter when complete...");
+    while(!Serial.available()) {}
+    Serial.read();
+    position.x = position.y = 0;
+
+    printCoordinates();
+}
+
+void StepperController::printCoordinates()
+{
+    String output = "Current position: (" + String(position.x) + ", " + String(position.y) + ")\n";
+    Serial.print(output);
+}
+
+void StepperController::travel(const Point &point)
+{
+    //TODO
 }

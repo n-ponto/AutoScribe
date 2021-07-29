@@ -1,3 +1,4 @@
+// NOTE: CNC Sheild X axis cooresponds to the top stepper, and Y axis to bottom stepper.
 #ifndef STEPPER_CONTROLLER_H_
 #define STEPPER_CONTROLLER_H_
 
@@ -17,14 +18,28 @@ typedef uint8_t Direction;
 #define LEFT  0b0010
 #define RIGHT 0b0001
 
+typedef struct {
+    uint16_t x;
+    uint16_t y;
+} Point;
+
 class StepperController
 {
 public:
     StepperController();
-    void move(Direction, uint16_t steps);
+    void move(Direction, uint16_t);
     void enable();
     void disable();
     bool areEnabled();
+    void square(uint16_t);
+    void diamond(uint16_t);
+    void home();
+    void printCoordinates();
+    void travel(const Point &);
+private:
+    uint32_t wait;
+    bool enabled;
+    Point position;
 };
 
 #endif // STEPPER_CONTROLLER_H_
