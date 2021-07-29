@@ -1,0 +1,13 @@
+.vscode
+build
+*.URL
+grbl_refrence
+CNC_Shield_Demo
+*/images
+test.py
+
+
+# 3D Printing Models
+*.stl
+*.g
+*.gcode
