@@ -126,8 +126,3 @@ void StepperController::printCoordinates()
     String output = "Current position: (" + String(position.x) + ", " + String(position.y) + ")\n";
     Serial.print(output);
 }
-
-void StepperController::travel(const Point &point)
-{
-    //TODO
-}
