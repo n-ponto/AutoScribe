@@ -5,6 +5,7 @@ grbl_refrence
 CNC_Shield_Demo
 */images
 test.py
+*/__pycache__
 
 
 # 3D Printing Models

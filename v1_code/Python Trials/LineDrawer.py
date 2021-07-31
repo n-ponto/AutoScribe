@@ -96,23 +96,17 @@ def bresenhamFromHere(xIn, yIn):
     else:
         x, y = xIn, yIn
 
-    # x and y fixed
-    down = y < 0
-    back = x < 0
-
-    times = abs(x)
     m_new = 2 * abs(y)
-    x_diff = abs(x)
-    slope_error_new = m_new - x_diff
-    while times > 0:
+    absx = abs(x)
+    slope_error_new = m_new - absx
+    c = slope_error_new - absx
+    for i in range(absx):
         if (slope_error_new >= 0): # change "y"
             moves.append(changeVal)
-            slope_error_new = slope_error_new - 2 * x_diff
-
+            slope_error_new += c
         else: # don't change "y"
             moves.append(changeOne)
-        slope_error_new = slope_error_new + m_new
-        times -= 1
+            slope_error_new += m_new
     
     return moves
 
@@ -137,16 +131,47 @@ def getPath(pv: PathVisualizer, startPoint: tuple):
     coords.append((cx, cy))
     pv.savePath(coords, "line")
     ui = ""
-    while ui != "quit":
+    while True:
         ui = input("enter new command: ")
+        if (ui == "q"): break
         ix, iy = [int(s) for s in ui.split()]
         moves = bresenhamFromHere(ix, iy)
         for mx, my in moves:
             cx += mx
             cy += my
+            print(cx, cy)
             coords.append((cx, cy))
         print(coords)
         pv.savePath(coords, "line")
+
+def testPath(pv: PathVisualizer, startPoint: tuple):
+    cx = int(startPoint[0])
+    cy = int(startPoint[1])
+    coords = []
+    print(f"starting from ({cx}, {cy})")
+    coords.append((cx, cy))
+    pv.savePath(coords, "line")
+    # up/down -- right/left -- steep/shallow
+    # up right steep, up right shallow, up left steep, up left shallow
+    # down right steep, down right shallow, down left steep, down left shallow
+    commands = [
+        (5, 10), (-20, -6), (5, -23), (20, 12), (-5, 14), (-14, 9), (-4, -16), (12, -4) 
+
+    ]
+    for ix, iy in commands:
+        print("Command:", ix, iy)
+        moves = bresenhamFromHere(ix, iy)
+        sx, sy = coords[len(coords)-1]
+        for mx, my in moves:
+            cx += mx
+            cy += my
+            print(cx, cy)
+            coords.append((cx, cy))
+        lx, ly = coords[len(coords)-1]
+        assert (sx + ix == lx and sy + iy == ly)
+        print(coords)
+        pv.savePath(coords, "line")
+        time.sleep(0.6)
             
 
 # driver function
@@ -161,7 +186,7 @@ if __name__=='__main__':
     # coords = movesToPath(moves, (h/2, h/2))
     # print(coords)
     # viz.savePath(coords, "line")
-    getPath(viz, (h/2, h/2))
+    testPath(viz, (h/2, h/2))
 
 
 

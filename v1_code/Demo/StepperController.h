@@ -36,10 +36,11 @@ public:
     void home();
     void printCoordinates();
     void travel(const Point &);
+    void localTravel(int16_t x, int16_t y);
+    Point position;
 private:
     uint32_t wait;
     bool enabled;
-    Point position;
 };
 
 #endif // STEPPER_CONTROLLER_H_

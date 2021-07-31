@@ -110,7 +110,7 @@ class PathVisualizer:
         canvas = [(0, 0, 0) for x in range(h * w)]
         for c in coords:
             x, y = c
-            if x >= w or y >= h:
+            if x >= w or y >= h or x < 0 or y < 0:
                 print(f"{bcolors.FAIL}[ERROR] Coordinate ({x}, {y}) is outside the canvas.{bcolors.ENDC}")
             canvas[self._map(c)] = 1
         im.putdata(canvas)

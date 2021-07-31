@@ -126,3 +126,61 @@ void StepperController::printCoordinates()
     String output = "Current position: (" + String(position.x) + ", " + String(position.y) + ")\n";
     Serial.print(output);
 }
+
+void StepperController::travel(const Point &pt)
+{
+    int16_t x, y;
+    x = pt.x - position.x;
+    y = pt.y - position.y;
+    localTravel(x, y);
+    position.x = pt.x;
+    position.y = pt.y;
+    printCoordinates();
+}
+
+void StepperController::localTravel(int16_t x, int16_t y)
+{
+    Serial.println("Travelling locally to: (" + String(x) + ", " + String(y) + ")");
+    bool back = x < 0;
+    bool down = y < 0;
+    int16_t absx, absy;
+    absx = back ? -1*x : x;
+    absy = down ? -1*y : y;
+    bool steep = absy > absx;
+
+    // Set the output command
+    Direction x_chng, y_chng;
+    x_chng = back ? LEFT : RIGHT;
+    y_chng = down ? DOWN : UP;
+    Direction moveOne, moveBoth;
+    moveBoth = x_chng + y_chng;
+    moveOne = steep ? y_chng : x_chng;
+
+    // Check if need to switch x and y
+    if (steep){
+        int16_t save = absx;
+        absx = absy;
+        absy = save; 
+    }
+
+    int16_t m, slope_error, c;
+    m = 2 * absy;
+    slope_error = m - absx;
+    c = slope_error - absx;
+    for (int16_t i = 0; i < absx; i++)
+    {
+        if (slope_error >= 0)
+        {
+            move(moveBoth, 1);
+            slope_error += c;
+        }
+        else
+        {
+            move(moveOne, 1);
+            slope_error += m;
+        }
+    }
+
+
+
+}
