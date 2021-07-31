@@ -3,9 +3,10 @@ build
 *.URL
 grbl_refrence
 CNC_Shield_Demo
-*/images
+*\images
 test.py
-*/__pycache__
+*\__pycache__
+
 
 
 # 3D Printing Models
