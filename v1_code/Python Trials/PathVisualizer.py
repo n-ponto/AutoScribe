@@ -4,6 +4,17 @@ import time
 import pathlib
 import os
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 class PathVisualizer:
 
     # Takes the canvas height and width, and an output file name
@@ -97,8 +108,10 @@ class PathVisualizer:
         h, w = self._dim
         im = Image.new('1', (h, w))
         canvas = [(0, 0, 0) for x in range(h * w)]
-
         for c in coords:
+            x, y = c
+            if x >= w or y >= h:
+                print(f"{bcolors.FAIL}[ERROR] Coordinate ({x}, {y}) is outside the canvas.{bcolors.ENDC}")
             canvas[self._map(c)] = 1
         im.putdata(canvas)
         self._save(im, fileName, v)
@@ -110,7 +123,7 @@ class PathVisualizer:
     def _save(self, im: Image, fileName: str, v=False):
         if not fileName.endswith(".png"): fileName += ".png"
         fullPath: str = os.path.join(self._saveDir, fileName)
-        if v: print("Saving to: " + fullPath)
+        if v: print(bcolors.OKCYAN + "Saving to: \"" + fullPath + "\""  + bcolors.ENDC)
         im.save(fullPath)
 
     # Maps x and y coordinates to a 1-D list
