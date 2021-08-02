@@ -8,8 +8,9 @@
 
 #include <Servo.h>
 #include "StepperController.h"
+#include "Transceiver.h"
 
-StepperController sc;
+
 
 long lastUpdate = 0;
 const long toggleDelay = 2000;
@@ -24,6 +25,9 @@ bool penDown = false;
 const int X_pin = 0;
 const int Y_pin = 1;
 const int SW_pin = 13;
+
+StepperController sc;
+Transceiver tcvr;
 
 const int cutoff = 180; // difference in joystick reading to ignore
 const int loRange = (512-cutoff), hiRange = (512+cutoff);
@@ -64,31 +68,44 @@ void handleJoystick()
     // sc.move(dir, 1);
 }
 
+void readSerialForPoint()
+{
+    if (Serial.available() >= sizeof(Point))
+    {
+        Point pt;
+        Serial.readBytes((char *)(&pt), sizeof(Point) );
+        Serial.println("(" + String(pt.x) + ", " + String(pt.y) + ")");
+        Serial.println("Bytes left: " + String(Serial.available()));
+        Serial.readString();
+        sc.enable();
+        sc.travel(pt);
+        sc.disable();
+    }
+}
+
 char c[2];
 void setup() {
-  Serial.begin(9600);
-  // Steppers
-
-  // Servo
-  servo.attach(ServoPin);
-  servo.write(servoAngle);
-  // Joystick
-  pinMode(SW_pin, INPUT);
-  // X and Y pins are analog & auto input
-  sc.home();
-  Serial.readBytes(c, 2);
+    sc.initialize();
+    tcvr.initialize(&sc, &servo);
+    // Servo
+    servo.attach(ServoPin);
+    servo.write(servoAngle);
+    // Joystick
+    // pinMode(SW_pin, INPUT);
+    // X and Y pins are analog & auto input
 }
 
 // TESTING FUNCTIONS
 void readStepsAndSqureDiamond();
 void readAndTravelToCoordinates();
 void testTheory();
+void testSerialCom();
 
 int steps;
 
 void loop() 
 {
-    testTheory();
+    tcvr.handle();
 }
 
 /*******************************************************************************
@@ -102,7 +119,7 @@ void readStepsAndSqureDiamond()
         Serial.readBytes(c, 2);
         if (steps < 1)
         {
-            sc.home();
+            sc.resetHome();
         }
         else 
         {
@@ -139,7 +156,8 @@ void testTheory()
 {
     if (Serial.available())
     {
-        Serial.read();
+        while(Serial.available()) { Serial.read(); }
+        Serial.readBytes(c, 2);
         Point p1, p2, p3;
         p1.x = 400; p1.y = 400;
         p2.x = 400; p2.y = 200;
@@ -150,5 +168,20 @@ void testTheory()
         sc.travel(p3);
         sc.disable();
         sc.position.x = sc.position.y = 0;
+    }
+}
+
+char incoming[10];
+// char *world = "world!";
+void testSerialCom()
+{
+    if (Serial.available() >= sizeof(Point))
+    {
+        Serial.println("Bytes to read: " + String(Serial.available()));
+        Point pt;
+        Serial.readBytes((char *)(&pt), sizeof(Point) );
+        Serial.println("(" + String(pt.x) + ", " + String(pt.y) + ")");
+        Serial.println("Bytes left: " + String(Serial.available()));
+        Serial.readString();
     }
 }

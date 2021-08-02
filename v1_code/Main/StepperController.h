@@ -26,14 +26,14 @@ typedef struct {
 class StepperController
 {
 public:
-    StepperController();
+    void initialize();
     void move(Direction, uint16_t);
     void enable();
     void disable();
     bool areEnabled();
     void square(uint16_t);
     void diamond(uint16_t);
-    void home();
+    void resetHome();
     void printCoordinates();
     void travel(const Point &);
     void localTravel(int16_t x, int16_t y);

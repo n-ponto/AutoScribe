@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include "StepperController.h"
 
-StepperController::StepperController()
+void StepperController::initialize()
 {
-    Serial.print("Stepper controller initialized.");
+    Serial.println("Stepper controller initialized.");
     pinMode(STEP_TOP, OUTPUT);
     pinMode(DIR_TOP,  OUTPUT);
     pinMode(STEP_BOT, OUTPUT);
@@ -12,6 +12,7 @@ StepperController::StepperController()
     digitalWrite(ENABLE, HIGH); // disable at the beginning
     wait = 700;
     enabled = false;
+    resetHome();
 }
 
 void StepperController::move(Direction d, uint16_t steps)
@@ -37,12 +38,13 @@ void StepperController::move(Direction d, uint16_t steps)
             uint8_t stepPin = stepper ? STEP_TOP : STEP_BOT;
             uint8_t dirPin =  stepper ? DIR_TOP  : DIR_BOT;
             digitalWrite(dirPin, spin);
-            for (uint16_t i = 0; i < steps; i++)
+            // If we're moving only one stepper we have to move it twice as far
+            for (uint16_t i = 0; i < steps*2; i++)
             {
-                // Set both high
+                // Set one high
                 digitalWrite(stepPin, HIGH);
                 delayMicroseconds(wait);
-                // Set both low
+                // Set one low
                 digitalWrite(stepPin, LOW); 
                 delayMicroseconds(wait);
             }
@@ -108,16 +110,11 @@ void StepperController::diamond(uint16_t steps)
     move(UP + LEFT, steps);
 }
 
-void StepperController::home()
+void StepperController::resetHome()
 {
     disable();
-    char c;
-    while(Serial.available()) { Serial.readBytes(&c, 1); }
-    Serial.print("Move the end to the bottom left and press enter when complete...");
-    while(!Serial.available()) {}
-    Serial.read();
+    Serial.println("Resetting home coordinates...");
     position.x = position.y = 0;
-
     printCoordinates();
 }
 
