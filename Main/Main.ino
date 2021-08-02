@@ -17,7 +17,7 @@ const long toggleDelay = 2000;
 
 // Servo
 const int ServoPin = 11;  // PWM pin for the servo
-int servoAngle = 90;
+int servoAngle = 70;
 Servo servo;
 bool penDown = false;
 
