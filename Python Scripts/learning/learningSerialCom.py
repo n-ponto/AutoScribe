@@ -24,12 +24,13 @@ class commands:
     CHANGE_PEN_ANGLE: chr =   0x01
     RESET_HOME: chr = 0x02
 
-def printError(text: str):
-    print(f"{bcolors.WARNING}[ERROR] {text}{bcolors.ENDC}")
 
-# Initialize serial port for communication with arduino
+# Define arduino
 arduino = serial.Serial(port='COM4', baudrate=9600, timeout=.1)
 messageStruct = 'BHH'
+
+def printError(text: str):
+    print(f"{bcolors.WARNING}[ERROR] {text}{bcolors.ENDC}")
 
 def write_coordinates(x: int, y: int):
     message: bytes = pack('BHH', 1, x, y)
@@ -102,8 +103,22 @@ def handleInput():
         time.sleep(0.5)
         arduinoRead()
 
+def testCommands():
+    # Initialize serial port for communication with arduino
+    print("Waiting...")
+    while(arduino.in_waiting < 1):
+        pass
 
-while True:
-    handleInput()
+    arduinoRead()
+    print("Starting")
+    for i in range(5):
+        command: bytes = pack("B", i)
+        print(f"command length: {len(command)}")
+        print(command)
+        arduino.write(command)
+        time.sleep(0.8)
+        arduinoRead()
+
+testCommands()
     
     
