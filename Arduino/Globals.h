@@ -13,4 +13,8 @@ typedef uint8_t Direction;
 #define LEFT 0b0010
 #define RIGHT 0b0001
 
+#define PEN_UP   0b1100
+#define PEN_DOWN 0b0011
+#define END      0b0000
+
 #endif // GLOBALS_H_

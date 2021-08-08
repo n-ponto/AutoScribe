@@ -1,4 +1,5 @@
 #include "Globals.h"
+#include "Commands.h"
 #include "Director.h"
 #include "Receiver.h"
 #include "Pen.h"
@@ -6,19 +7,6 @@
 Director *director;
 Receiver *receiver;
 Pen *pen;
-
-typedef int (*fptr)();
-
-// Local function parameters
-void handle(Command);
-void setPenRange();
-void changePenAngle();
-void resetHome();
-void draw();
-void manualStep();
-
-void (*functions[])() = {
-    setPenRange, changePenAngle, resetHome, draw, manualStep};
 
 void setup()
 {
@@ -30,26 +18,59 @@ void setup()
 void loop()
 {
     Command command = (Command)receiver->readByte();
-    functions[command]();
+    HANDLE(command);
 }
 
 void setPenRange()
 {
     Serial.println("setPenRange");
+    Angle min, max;
+    min = receiver->readByte();
+    max = receiver->readByte();
+    pen->setDownAngle(max);
+    pen->setUpAngle(min);
 }
+
 void changePenAngle()
 {
     Serial.println("changePenAngle");
+    Angle angle = receiver->readByte();
+    pen->goTo(angle);
 }
+
 void resetHome()
 {
     Serial.println("resetHome");
+    director->resetHome();
 }
+
 void draw()
 {
     Serial.println("draw");
 }
+
+// Enters manual step mode:
+// Takes a direction (as defined by Direction struct)
+// If the byte is null then stop
 void manualStep()
 {
-    Serial.println("manualStep");
+    Serial.println("Entering manual step mode");
+    uint8_t b;
+    director->enable();
+    while(true)
+    {
+        b = receiver->readByte();
+        switch(b)
+        {
+            case(END): 
+                Serial.println("Ending manual step mode"); 
+                director->disable();
+                return;
+            case(PEN_UP): pen->up(); break;
+            case(PEN_DOWN): pen->down(); break;
+            default:
+                director->move(b, 1);
+                break;
+        }
+    }
 }

@@ -9,7 +9,7 @@
 
 Pen::Pen()
 {
-    Serial.print("Pen initialized.");
+    Serial.println("Pen initialized.");
     this->servo = Servo();
     this->upAngle = DEFAULT_UP;
     this->downAngle = DEFAULT_DOWN;
