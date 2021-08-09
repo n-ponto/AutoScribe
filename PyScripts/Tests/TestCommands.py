@@ -1,8 +1,12 @@
-from SerialPort import SerialPort
+import sys, os
+sys.path.append(os.path.dirname(__file__ ) + "/..")
+for path in sys.path:
+    print(path)
 import time
 from struct import *
+from Tools.SerialPort import SerialPort
 
-number_commands: int = 5
+number_commands: int = 6
 
 # Initialize serial port for communication with arduino
 arduino = SerialPort()

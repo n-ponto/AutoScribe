@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter.filedialog import asksaveasfilename
 from typing import Collection
 
+# https://realpython.com/python-gui-tkinter/#working-with-widgets
+
 def borderTypes():
     border_effects = {
         "flat": tk.FLAT,

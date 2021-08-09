@@ -1,7 +1,7 @@
 import serial
 import time
 from struct import *
-from ConsoleColors import ConsoleColors as cc
+from Config import ConsoleColors as cc
 
 class SerialPort():
 

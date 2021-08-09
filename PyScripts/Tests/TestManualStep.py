@@ -1,4 +1,6 @@
-from SerialPort import SerialPort
+import sys, os
+sys.path.append(os.path.dirname(__file__ ) + "/..")
+from Tools.SerialPort import SerialPort
 import time
 from struct import *
 

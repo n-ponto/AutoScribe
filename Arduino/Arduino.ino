@@ -27,8 +27,8 @@ void setPenRange()
     Angle min, max;
     min = receiver->readByte();
     max = receiver->readByte();
-    pen->setDownAngle(max);
     pen->setUpAngle(min);
+    pen->setDownAngle(max);
 }
 
 void changePenAngle()
@@ -36,6 +36,11 @@ void changePenAngle()
     Serial.println("changePenAngle");
     Angle angle = receiver->readByte();
     pen->goTo(angle);
+}
+
+void moveToCoordinate()
+{
+    Serial.println("Not done.");
 }
 
 void resetHome()

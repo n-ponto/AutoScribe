@@ -34,6 +34,7 @@ enum Command
 
 void setPenRange();
 void changePenAngle();
+void moveToCoordinate();
 void resetHome();
 void draw();
 void manualStep();
@@ -41,6 +42,7 @@ void manualStep();
 void (*functions[])() = {
     setPenRange,
     changePenAngle,
+    moveToCoordinate,
     resetHome,
     draw,
     manualStep};
