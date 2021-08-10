@@ -1,6 +1,6 @@
 import os, sys
 sys.path.append(os.path.dirname(__file__ ) + "/..")
-from Tools.SerialPort import SerialPort
+from SerialPort import SerialPort
 import tkinter as tk
 import threading
 import time

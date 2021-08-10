@@ -9,6 +9,7 @@ public:
     Receiver();
     uint8_t readByte();
     Point readPoint();
+    uint16_t readPair();
 };
 
 #endif // RECEIVER_H_

@@ -10,6 +10,7 @@ class Commands():
     RESET_HOME = 3
     DRAW = 4
     MANUAL_STEP = 5
+    SET_STEPPER_DELAY = 6
 
 class ConsoleColors:
     HEADER = '\033[95m'

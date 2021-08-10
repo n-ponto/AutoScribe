@@ -11,7 +11,7 @@ Director::Director()
     pinMode(DIR_BOT, OUTPUT);
     pinMode(ENABLE, OUTPUT);
     digitalWrite(ENABLE, HIGH); // disable at the beginning
-    this->wait = 700;
+    this->delay = 700;
     this->enabled = false;
     resetHome();
 }
@@ -54,10 +54,10 @@ void Director::move(Direction d, uint16_t steps)
         {
             // Set one high
             digitalWrite(stepPin, HIGH);
-            delayMicroseconds(wait);
+            delayMicroseconds(delay);
             // Set one low
             digitalWrite(stepPin, LOW);
-            delayMicroseconds(wait);
+            delayMicroseconds(delay);
         }
         return;
     }
@@ -72,11 +72,11 @@ void Director::move(Direction d, uint16_t steps)
         // Set both high
         digitalWrite(STEP_TOP, HIGH);
         digitalWrite(STEP_BOT, HIGH);
-        delayMicroseconds(wait);
+        delayMicroseconds(delay);
         // Set both low
         digitalWrite(STEP_TOP, LOW);
         digitalWrite(STEP_BOT, LOW);
-        delayMicroseconds(wait);
+        delayMicroseconds(delay);
     }
 }
 
@@ -109,6 +109,11 @@ void Director::resetHome()
 {
     disable();
     this->position.x = this->position.y = 0;
+}
+
+void Director::setDelay(uint16_t delay)
+{
+    this->delay = delay;
 }
 
 void Director::printCoordinates()

@@ -79,3 +79,11 @@ void manualStep()
         }
     }
 }
+
+void setStepperDelay()
+{
+    uint16_t b = receiver->readPair();
+    director->setDelay(b);
+    Serial.print("Set stepper delay to ");
+    Serial.println(b, DEC);
+}

@@ -35,6 +35,10 @@ class SerialPort():
         assert(type(x) == int)
         self._port.write(pack("B", x))
 
+    def writeShort(self, x: int):
+        assert(type(x) == int)
+        self._port.write(pack("H", x))
+
 if __name__=='__main__':
     sp = SerialPort()
     sp.awaitResponse()

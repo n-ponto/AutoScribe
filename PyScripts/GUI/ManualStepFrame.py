@@ -18,6 +18,9 @@ directions =  {
 PEN_UP = 0b1100
 PEN_DOWN = 0b0011
 
+TIMEOUT_SECONDS = 10
+MANUAL_STEP_COMMAND = 5
+
 curDirection: int = 0
 
 serial: SerialPort
@@ -25,13 +28,11 @@ running_flag: bool = False
 pen_flag: bool = True
 penIsUp: bool = True
 
-timeoutSeconds = 10
-
 # Function designed to be run in it's own thread so it can send continuous instructions
 # to the arduino without handling user input directly
 def writeDirection():
     print("Starting")
-    serial.writeByte(5) # Send the command code for manual stepping
+    serial.writeByte(MANUAL_STEP_COMMAND) # Send the command code for manual stepping
     serial.writeByte(PEN_UP) # Send code to initilize the pen in the up position
     time.sleep(0.5)
     serial.read()
@@ -49,9 +50,8 @@ def writeDirection():
                     serial.writeByte(PEN_UP)
                 pen_flag = False
             elif curDirection:
-                # print(curDirection)
                 serial.writeByte(curDirection)
-            elif (time.time()-lastActive > timeoutSeconds):
+            elif (time.time()-lastActive > TIMEOUT_SECONDS):
                 print("Timeout")
                 running_flag = False
                 break
@@ -73,7 +73,6 @@ def exit():
 # Creates the manual step frame
 class ManualStepFrame(tk.Frame):
 
-    serial: SerialPort
     thread: Thread
 
     def __init__(self, master: tk.Misc, sp: SerialPort, exit_functions: list):

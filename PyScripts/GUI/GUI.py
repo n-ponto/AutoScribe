@@ -20,6 +20,8 @@ settingsMenu:tk.Frame = Settings(root, serial)
 settingsMenu.grid(row=0, column=0)
 manualStepFrame = ManualStepFrame(root, serial, exit_functions)
 manualStepFrame.grid(row=0, column=1)
+
+serial.awaitResponse()
 root.mainloop()
 
 

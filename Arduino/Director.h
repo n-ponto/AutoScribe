@@ -23,6 +23,7 @@ public:
     void disable();
     bool areEnabled();
     void resetHome();
+    void setDelay(uint16_t);
     void printCoordinates();
     void travel(const Point &);
     void localTravel(int16_t x, int16_t y);
@@ -31,7 +32,7 @@ public:
 
 private:
     Point position;
-    uint32_t wait;
+    uint32_t delay;
     bool enabled;
 };
 

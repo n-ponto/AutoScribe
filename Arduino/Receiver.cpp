@@ -26,3 +26,11 @@ Point Receiver::readPoint()
     Serial.readBytes((char *)&p, sizeof(Point));
     return p;
 }
+
+uint16_t Receiver::readPair()
+{
+    while(Serial.available() < 2) {}
+    uint16_t p = 0xFF;
+    Serial.readBytes((char*)&p, 2);
+    return p;
+}

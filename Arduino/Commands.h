@@ -29,7 +29,8 @@ enum Command
     MOVE_TO_COORDINATE,
     RESET_HOME,
     DRAW,
-    MANUAL_STEP
+    MANUAL_STEP,
+    SET_STEPPER_DELAY
 };
 
 void setPenRange();
@@ -38,6 +39,7 @@ void moveToCoordinate();
 void resetHome();
 void draw();
 void manualStep();
+void setStepperDelay();
 
 void (*functions[])() = {
     setPenRange,
@@ -45,6 +47,7 @@ void (*functions[])() = {
     moveToCoordinate,
     resetHome,
     draw,
-    manualStep};
+    manualStep,
+    setStepperDelay};
 
 #endif // COMMANDS_H_
