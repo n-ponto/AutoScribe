@@ -15,8 +15,8 @@ directions =  {
     "d":      0b0001
     }
 
-PEN_UP = 0b1100
-PEN_DOWN = 0b0011
+PEN_UP = 0x10
+PEN_DOWN = 0x11
 
 TIMEOUT_SECONDS = 10
 MANUAL_STEP_COMMAND = 5

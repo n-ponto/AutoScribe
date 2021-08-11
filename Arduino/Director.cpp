@@ -18,9 +18,9 @@ Director::Director()
 
 void Director::move(Direction d, uint16_t steps)
 {
-    if (d < 1 || d > 12)
+    if (d < 0x01 || 0x0A < d)
     {
-        // Can't be zero or have 3 bits selected
+        // Can't be null or greater than 0x0A
         return;
     }
 

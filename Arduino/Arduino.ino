@@ -49,9 +49,41 @@ void resetHome()
     director->resetHome();
 }
 
+// Only takes 11bits to represent a coordinate dimension
+// Leaves 5bits in each 2byte coordinate
 void draw()
 {
-    Serial.println("draw");
+    Serial.println("Entering drawing mode");
+    Point pt;
+    director->resetHome();
+    director->enable();
+    while(true)
+    {
+        // End if both coordinates are zero
+        if (~(pt.x | pt.y))
+        {
+            Serial.println("Ending drawing mode");
+            director->disable();
+            return;
+        }
+
+        uint8_t switchVal = pt.x>>11;
+        Serial.print("switchVal: ");
+        Serial.println(switchVal, BIN);
+        switch(switchVal)
+        {
+            case(DRAW_PEN_UP): pen->up(); break;
+            case(DRAW_PEN_DOWN): pen->down(); break;
+        }
+        pt.x &= COORD_MASK;
+        pt.y &= COORD_MASK;
+        Serial.print("Point (");
+        Serial.print(pt.x);
+        Serial.print(", ");
+        Serial.print(pt.y);
+        Serial.println(")");
+        director->travel(pt);
+    }
 }
 
 // Enters manual step mode:
@@ -67,12 +99,12 @@ void manualStep()
         b = receiver->readByte();
         switch(b)
         {
-            case(END): 
+            case(MAN_END): 
                 Serial.println("Ending manual step mode"); 
                 director->disable();
                 return;
-            case(PEN_UP): pen->up(); break;
-            case(PEN_DOWN): pen->down(); break;
+            case(MAN_PEN_UP): pen->up(); break;
+            case(MAN_PEN_DOWN): pen->down(); break;
             default:
                 director->move(b, 1);
                 break;

@@ -11,7 +11,7 @@ class main:
         self.old_y = None
         self.penwidth = 5
         self.drawWidgets()
-        self.c.bind('<B1-Motion>',self.paint)#drwaing the line 
+        self.c.bind('<B1-Motion>',self.paint) #drawing the line 
         self.c.bind('<ButtonRelease-1>',self.reset)
 
     def paint(self,e):
