@@ -23,6 +23,7 @@ typedef uint8_t Direction;
 // Commands while in draw mode
 #define DRAW_PEN_UP   0b10000
 #define DRAW_PEN_DOWN 0b01000
+#define DRAW_END      0b11111
 #define COORD_MASK    0b0000011111111111
 
 #endif // GLOBALS_H_

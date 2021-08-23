@@ -9,6 +9,8 @@ class SerialPort():
 
     def __init__(self, port='COM4', baudrate=9600, timeout=.1) -> None:
         self._port = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
+        self.buffer_size = 12800
+        self._port.set_buffer_size(rx_size = self.buffer_size, tx_size=self.buffer_size)
 
     # Opens the serial port for communication and awaits the initialization output
     # from the _port. Returns the Serial object
@@ -38,6 +40,10 @@ class SerialPort():
     def writeShort(self, x: int):
         assert(type(x) == int)
         self._port.write(pack("H", x))
+
+    def writePoint(self, x:int, y:int):
+        assert(type(x)==int and type(y)==int)
+        self._port.write(pack("HH", x, y))
 
 if __name__=='__main__':
     sp = SerialPort()

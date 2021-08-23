@@ -3,6 +3,7 @@
 #include "Director.h"
 #include "Receiver.h"
 #include "Pen.h"
+#include "InstructionQueue.h"
 
 Director *director;
 Receiver *receiver;
@@ -45,7 +46,7 @@ void moveToCoordinate()
 
 void resetHome()
 {
-    Serial.println("resetHome");
+    Serial.println("Resetting home...");
     director->resetHome();
 }
 
@@ -55,34 +56,120 @@ void draw()
 {
     Serial.println("Entering drawing mode");
     Point pt;
-    director->resetHome();
     director->enable();
     while(true)
     {
-        // End if both coordinates are zero
-        if (~(pt.x | pt.y))
-        {
-            Serial.println("Ending drawing mode");
-            director->disable();
-            return;
-        }
-
+        pt = receiver->readPoint();
         uint8_t switchVal = pt.x>>11;
         Serial.print("switchVal: ");
         Serial.println(switchVal, BIN);
         switch(switchVal)
         {
-            case(DRAW_PEN_UP): pen->up(); break;
-            case(DRAW_PEN_DOWN): pen->down(); break;
+            case(0): break;
+            case(DRAW_PEN_UP): 
+                pen->up();
+                delay(100);
+                Serial.println("UP"); 
+                break;
+            case(DRAW_PEN_DOWN): 
+                pen->down(); 
+                delay(100);
+                Serial.println("DOWN"); 
+                    break;
+            case(DRAW_END): 
+                Serial.println("Ending drawing mode");
+                director->disable();
+                return;
         }
         pt.x &= COORD_MASK;
         pt.y &= COORD_MASK;
-        Serial.print("Point (");
+        Serial.print("Read point: (");
         Serial.print(pt.x);
         Serial.print(", ");
         Serial.print(pt.y);
         Serial.println(")");
         director->travel(pt);
+    }
+}
+
+InstructionQueue *instructionQueue;
+
+void draw()
+{
+    Serial.println("Entering drawing mode");
+    Point pt;
+
+    // Create a new head instruction queue
+    // The head queue shouldn't be touched for the rest of this
+    instructionQueue = new InstructionQueue;
+
+    // Create a local queue and initialize to the head
+    InstructionQueue *localQueue = instructionQueue;
+    uint8_t *queue = instructionQueue->queue;
+    uint8_t queueIndex = 0;
+    // director->enable();
+    Point prevPt = {0, 0};
+
+    // Read from the serial port and populate queue with instructions
+    while (true)
+    {
+        pt = receiver->readPoint();
+        uint8_t switchVal = pt.x>>11;
+        
+        // Interpret point from serial
+        switch(switchVal)
+        {
+            // No command means just a coordinate
+            case(0):
+                break;
+            case(DRAW_PEN_UP):
+                // Add pen up instruction to the queue
+                queue[queueIndex++] = PEN_UP_INSTRUCTION;
+                break;
+            case(DRAW_PEN_DOWN):
+                // Add pen down instruction to the queue
+                queue[queueIndex++] = PEN_DOWN_INSTRUCTION;
+                queueIndex++;
+                break;
+            case(DRAW_END): 
+                director->disable();
+                return;
+            
+            // Calculate the local movement required
+            uint16_t relativeX, relativeY;
+            relativeX = pt.x - prevPt.x;
+            relativeY = pt.y - prevPt.y;
+
+            // Add the local movement to the instruction queue
+            if (relativeX < 0x40 && relativeY < 0x100)  // Fit in one byte
+            {
+                // Coordinates pair can fit in two bytes
+                queue[queueIndex++] = TWO_BYTE + relativeX;
+                queue[queueIndex++] = relativeY;
+            }
+            else
+            {
+                // Coordinate pair requires 4 bytes
+                queue[queueIndex+=2] = relativeX;
+                queue[queueIndex+=2] = relativeY;
+            }
+            // Update the previous point
+            prevPt = pt;
+        }
+
+        // Handle queue overflow
+        /* For now, just make a new queue if there's less than 4 bytes which ensures that 
+        we'll have space for the largest element (4 byte coordinate pair), but could 
+        mean we're wasting 3 bytes per queue. */
+        if (QUEUE_SIZE < queueIndex + 4)  // can fit another 4 bytes?
+        {
+            // Create a new queue and create a link
+            instructionQueue->next = new InstructionQueue;
+            instructionQueue = instructionQueue->next;
+            queue = instructionQueue->queue;
+            
+        }
+
     }
 }
 
@@ -118,4 +205,10 @@ void setStepperDelay()
     director->setDelay(b);
     Serial.print("Set stepper delay to ");
     Serial.println(b, DEC);
+}
+
+
+void timerInterrupt()
+{
+    
 }

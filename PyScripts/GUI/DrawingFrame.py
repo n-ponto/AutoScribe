@@ -1,7 +1,12 @@
 from tkinter.constants import LEFT, TRUE
 from SerialPort import SerialPort
 import tkinter as tk
+from time import sleep
 
+PEN_UP =   0b10000<<11
+PEN_DOWN = 0b01000<<11
+END =      0b11111<<11
+DRAW_COMMAND = 4
 
 class DrawingFrame(tk.Frame):
 
@@ -36,31 +41,65 @@ class DrawingFrame(tk.Frame):
         if self.tempLine:
             try:
                 coords = event.widget.coords(self.tempLine)
+                coords[2] = event.x
+                coords[3] = event.y
+                event.widget.coords(self.tempLine, *coords)
             except Exception:
                 print('ERROR')
                 print('self.tempLine', self.tempLine)
                 print('self.canvas.find_all()', self.canvas.find_all())
-            coords[2] = event.x
-            coords[3] = event.y
-            event.widget.coords(self.tempLine, *coords)
-
+            
     def send(self):
-        print('Sending coordinates...')
+        print('Extracting Instructions...')
         points = []
         lines = self.canvas.find_all()
         prevEnd = None
+        # Extract Instructions
         for line in lines:
             coords = self.canvas.coords(line)
             print(coords)
             start = tuple(coords[:2])
             end = tuple(coords[2:])
+            penDown:bool = False
             if (start != prevEnd):
-                points.append("pen up")
+                sx, sy = start
+                start = (PEN_UP + sx, sy)
                 points.append(start)
-                points.append("pen down")
+                penDown = True
             prevEnd = end
-            points.append(end)
-        print(points)
+            if (end != start):
+                if penDown: end = (end[0] + PEN_DOWN, end[1])
+                points.append(end)
+        # Send instructions
+        print('Sending instructions...')
+        self.serial.writeByte(DRAW_COMMAND)
+        sleep(0.1)
+        self.serial.read()
+        self.canvas.update()
+        print("Mapped points: ")
+        for x, y in points:
+            # Map to same coordinate as machine
+            y = self.canvas.winfo_height() - y
+            # Print
+            if (int(x)>>11 == PEN_UP>>11):
+                print("UP", x-PEN_UP, y)
+            elif (int(x)>>11 == PEN_DOWN>>11):
+                print("DOWN", x-PEN_DOWN, y)
+            else:
+                print(x, y)
+            self.serial.writePoint(int(x), int(y))
+            self.serial.read()
+            sleep(0.2)
+
+        # Return home when done
+        self.serial.writePoint(PEN_UP, 0)
+
+        self.serial.writePoint(END, 0)
+        print('Done sending instructions.')
+        sleep(0.1)
+        self.serial.read()
+        
+
 
     def undo(self, event):
         print("undo")
@@ -79,6 +118,7 @@ class DrawingFrame(tk.Frame):
             print("Nothing to undo.")
 
     def clear(self, event=None):
+        self.tempLine = None
         self.canvas.delete(tk.ALL)
 
     def drawWidgets(self):
@@ -100,11 +140,11 @@ class DrawingFrame(tk.Frame):
         
 
 
-
 if __name__ == '__main__':
     root = tk.Tk()
     root.title('DrawingFrame')
-    serial = None # SerialPort()
+    serial = SerialPort()
+    serial.awaitResponse()
     df = DrawingFrame(root, serial)
     df.pack(fill=tk.BOTH, expand=True)
     root.mainloop()

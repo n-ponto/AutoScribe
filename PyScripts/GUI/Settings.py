@@ -69,6 +69,15 @@ def Settings(master: tk.Misc, serial: SerialPort) -> tk.Frame:
     btn_update = tk.Button(master=frame, text="Update", command=handleUpdate)
     btn_update.grid(row=n, columnspan=2, pady=5)
 
+    # Reset Home Function
+    def handleResetHome():
+        serial.writeByte(Commands.RESET_HOME)
+        serial.read()
+
+    n+=1
+    btn_rsthm = tk.Button(master=frame, text="Reset Home", command=handleResetHome)
+    btn_rsthm.grid(row=n, columnspan=2, pady=5)
+
     return frame
 
 

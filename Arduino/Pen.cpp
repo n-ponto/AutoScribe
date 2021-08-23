@@ -4,8 +4,8 @@
 
 #define SERVO_PIN 11
 
-#define DEFAULT_UP 80
-#define DEFAULT_DOWN 100
+#define DEFAULT_UP 50
+#define DEFAULT_DOWN 70
 
 Pen::Pen()
 {
@@ -14,6 +14,7 @@ Pen::Pen()
     this->upAngle = DEFAULT_UP;
     this->downAngle = DEFAULT_DOWN;
     servo.attach(SERVO_PIN);
+    servo.write(DEFAULT_UP);
 }
 
 void Pen::goTo(Angle angle)

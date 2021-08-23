@@ -11,7 +11,7 @@ Director::Director()
     pinMode(DIR_BOT, OUTPUT);
     pinMode(ENABLE, OUTPUT);
     digitalWrite(ENABLE, HIGH); // disable at the beginning
-    this->delay = 700;
+    this->delay = 1000;
     this->enabled = false;
     resetHome();
 }
