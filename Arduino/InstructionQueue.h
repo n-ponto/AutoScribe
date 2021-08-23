@@ -23,6 +23,8 @@
  * between the elements.
  */
 
+typedef uint8_t InterruptCommand;
+
 typedef struct instructionQueue
 {
     uint8_t queue[QUEUE_SIZE];

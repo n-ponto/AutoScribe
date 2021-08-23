@@ -92,7 +92,9 @@ void draw()
     }
 }
 
-InstructionQueue *instructionQueue;
+InstructionQueue *headQueue;
+InstructionQueue *interruptQueue;
+uint8_t interruptQueueIndex;
 
 void draw()
 {
@@ -101,12 +103,12 @@ void draw()
 
     // Create a new head instruction queue
     // The head queue shouldn't be touched for the rest of this
-    instructionQueue = new InstructionQueue;
+    headQueue = new InstructionQueue;
 
     // Create a local queue and initialize to the head
-    InstructionQueue *localQueue = instructionQueue;
+    InstructionQueue *localQueue = interruptQueue = headQueue;
     uint8_t *queue = instructionQueue->queue;
-    uint8_t queueIndex = 0;
+    uint8_t queueIndex = interruptQueueIndex = 0;
     // director->enable();
     Point prevPt = {0, 0};
 
@@ -161,16 +163,38 @@ void draw()
         /* For now, just make a new queue if there's less than 4 bytes which ensures that 
         we'll have space for the largest element (4 byte coordinate pair), but could 
         mean we're wasting 3 bytes per queue. */
-        if (QUEUE_SIZE < queueIndex + 4)  // can fit another 4 bytes?
+        if (queueIndex > QUEUE_SIZE - 4)  // can fit another 4 bytes?
         {
             // Create a new queue and create a link
-            instructionQueue->next = new InstructionQueue;
-            instructionQueue = instructionQueue->next;
-            queue = instructionQueue->queue;
-            
+            localQueue->next = new InstructionQueue;
+            localQueue = localQueue->next;
+            queue = localQueue->queue;
+            queueIndex = 0;
         }
 
     }
+}
+
+// Set by the interrupt in the previous call, contains only the smallest amount
+// of information needed by the interrupt 
+InterruptCommand interruptCommand;
+
+/*
+Commands required to be stored in the interrupt command:
+1. top high
+2. bottom high
+3. both high
+4. top low
+5. bottom low
+6. both low
+---------
+7. pen up
+8. pen down
+*/
+
+void timerInterrupt()
+{
+    switch(interruptCommand)
 }
 
 // Enters manual step mode:
@@ -205,10 +229,4 @@ void setStepperDelay()
     director->setDelay(b);
     Serial.print("Set stepper delay to ");
     Serial.println(b, DEC);
-}
-
-
-void timerInterrupt()
-{
-    
 }
