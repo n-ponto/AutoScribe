@@ -2,29 +2,24 @@
 
 ## Overview
 
-Summary: 
+### Summary: 
 - The image processor accepts a regular image file and converts the image into line art
 - The line art is converted into a set of straight lines which can be sent to the line drawer
 
-Input - an image file (.jpg, .png, etc.)
+### Basic process:
+- The color image is converted from grayscale
+- Edges of the image are found using the **Canny** algorithm
+- The lines in the image are found by using the probabilistic **Hough** transform on the edges
 
-Output - the coordinates to send to the drawing machine
+---
 
-___
+### Links:
 
-## Steps
-### 1. Image to Line Drawing
+- [Tkinter Photo GUI](https://python.plainenglish.io/creating-a-basic-photoshop-app-with-python-c24181a09f69) uses pillow and tkinter to create a GUI for photo editing.
 
-Summary: Converts an image into line art. The line art is represented by a boolean numpy array.
+- [Python Hough Transform](https://opencv24-python-tutorials.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_houghlines/py_houghlines.html)
+general usage of the OpenCV probabilistic Hough transform in python.
 
-Input - an image file
-
-Output - a boolean numpy array representation of the line art
-
-### 2. Line Drawing to Coordinates
-
-Summary: converts the line drawing into a set of coordinates which represent the lines to draw to recreate the image on paper
-
-Input - boolean numpy array
-
-Output - list of coordinates to draw
+- [Interactive Hough Transform](https://docs.opencv.org/4.5.3/d3/de6/tutorial_js_houghlines.html) 
+web interface for uploading images and seeing the OpenCV output of the Hough Transform.
+Code in JavaScript, but the parameters to Canny and Hough algorithms are a bit better.

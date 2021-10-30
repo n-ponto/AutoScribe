@@ -66,22 +66,45 @@ def img_to_lines_v1(img: np.ndarray):
     cv2.imwrite('4houghlines.jpg', view)
     return lines
 
+# From: https://docs.opencv.org/4.5.3/d3/de6/tutorial_js_houghlines.html
 def img_to_lines_v2(img):
     # let src = cv.imread('canvasInput');
     # let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+    dst = np.zeros(img.shape, dtype=np.uint8)
     # let lines = new cv.Mat();
     # let color = new cv.Scalar(255, 0, 0);
+    color = (255, 255, 255)
     # cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+    gray = cv2.cvtColor(img, cv2.COLOR_RGBA2GRAY, 0)  # convert to grayscale
     # cv.Canny(src, src, 50, 200, 3);
+    edges = cv2.Canny(image=gray, 
+                      threshold1=100, # The smallest value between threshold1 and threshold2 is used for edge linking. 
+                      threshold2=200, # The largest value is used to find initial segments of strong edges.
+                      apertureSize=3,
+                      L2gradient=True)
+    cv2.imwrite("canny.jpg", edges)
     # // You can try more different parameters
     # cv.HoughLinesP(src, lines, 1, Math.PI / 180, 2, 0, 0);
+    lines = cv2.HoughLinesP(image=edges, 
+                            rho=1, # Distance resolution of the accumulator in pixels. 
+                            theta=np.pi/360, # Angle resolution of the accumulator in radians.
+                            threshold=2, # Accumulator threshold parameter. Only those lines are returned that get enough votes
+                            minLineLength=0, # Line segments shorter than that are rejected. 
+                            maxLineGap=0) # Maximum allowed gap between points on the same line to link them.
     # // draw lines
     # for (let i = 0; i < lines.rows; ++i) {
     #     let startPoint = new cv.Point(lines.data32S[i * 4], lines.data32S[i * 4 + 1]);
     #     let endPoint = new cv.Point(lines.data32S[i * 4 + 2], lines.data32S[i * 4 + 3]);
     #     cv.line(dst, startPoint, endPoint, color);
     # }
+    print('found', lines.shape[0], 'lines')
+    for row in lines:
+        x1, y1, x2, y2 = row[0]
+        startPoint = (x1, y1)
+        endPoint = (x2, y2)
+        cv2.line(dst, startPoint, endPoint, color)
     # cv.imshow('canvasOutput', dst);
+    cv2.imwrite('houghlines.jpg', dst)
     # src.delete(); dst.delete(); lines.delete();
 
 
@@ -140,7 +163,7 @@ def open_img(path: str):
     return img, folder
 
 if __name__ == '__main__':
-    sys.argv.append('.\\ImageProcessor\images\sample02.jpg')
+    sys.argv.append('.\\ImageProcessor\images\sample01.jpg')
 
     # Check correct arguments
     if (len(sys.argv) != 2):
@@ -152,5 +175,5 @@ if __name__ == '__main__':
     folder: str
     img, folder = open_img(sys.argv[1])
 
-    line_drawing = create_line_drawing_image(img)
+    # line_drawing = create_line_drawing_image(img)
     lines = img_to_lines_v2(img)
