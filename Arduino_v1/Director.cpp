@@ -1,3 +1,7 @@
+/*******************************************************************************
+ * Controls the movement of both stepper motors
+*******************************************************************************/
+
 #include <Arduino.h>
 #include "Globals.h"
 #include "Director.h"
