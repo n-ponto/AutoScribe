@@ -23,7 +23,7 @@ acts on that information.
 
 
 ## Accepting Commands mode
-Listens to serial connection to interpret one of the commands in the list of commands below. Most of these commands will execute and automatically return to this mode, but if the command is to switch commands, then the Arduino will remain in the other runtime mode until receiving a signal to return to this mode.
+Listens to serial connection for one byte commands from the list of commands below. Generally, if the command can be completed quickly or requires reading a predetermined amount of data from serial, it is executed in the Accepting Commands runtime mode before listening for the next command. If the command is to switch commands, then the Arduino will switch remain in the other runtime mode until receiving a signal to return to this mode.
 
 | Command | Description |
 | ----------- | ----------- |
