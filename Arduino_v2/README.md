@@ -27,12 +27,12 @@ Listens to serial connection for one byte commands from the list of commands bel
 
 | Command | Description |
 | ----------- | ----------- |
-| SET_PEN_RANGE | Used to define the top and bottom boundaries of the pen's movement. After receiving this command, it will listen for two more bytes, one byte each for the minimum and maximum angle for the pens movement.  |
+| SET_PEN_RANGE | Used to define the top and bottom boundaries of the pen's movement. Will listen for two more bytes, one byte each for the minimum and maximum angle for the pens movement.  |
 | CHANGE_PEN_ANGLE | Used to immediately change the current angle of the pen. This can be useful when trying to determine the optimal pen range. It will listen for one more byte for the angle to move the pen (i.e. the servo motor). | 
 | MOVE_TO_COORDINATE | Used to immediately change the current location of the pen. It will listent for 4 total more bytes, two 2B integers for the x and y coordinates. | 
 | RESET_HOME | Used to reset the home value of the steppers. When this command is executed the current location of the end effector will be considered the origin. |
-| DRAW | Will go into Drawing mode.  |
-| MANUAL_STEP | Will go into Manual Control mode. |
+| ENTER_DRAW_MODE | Will go into Drawing mode.  |
+| ENTER_MANUAL_CONTROL_MODE | Will go into Manual Control mode. |
 | SET_STEPPER_DELAY | Sets the delay between signals to the steppers. This value is directly related to the movement speed of the steppers. Should be calibrated to optimize between speed and minimal shaking. |
 
 ## Manual Control mode

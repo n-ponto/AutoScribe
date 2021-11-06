@@ -1,3 +1,7 @@
+/*
+Contains all code specific to the Manual Control runtime mode.
+*/
+
 void drawing()
 {
     // Read 4 bytes from serial corresponding to a coordinate pair

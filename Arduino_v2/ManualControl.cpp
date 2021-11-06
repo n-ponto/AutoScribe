@@ -1,3 +1,7 @@
+/*
+Contains all code specific to the Manual Control runtime mode.
+
+*/
 
 void manual_control()
 {
