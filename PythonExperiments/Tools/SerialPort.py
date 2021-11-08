@@ -1,13 +1,13 @@
 import serial
 import time
 from struct import *
-from Config import ConsoleColors as cc
+from ConsoleColors import ConsoleColors as cc
 
 class SerialPort():
 
     _port: serial.Serial
 
-    def __init__(self, port='COM4', baudrate=9600, timeout=.1) -> None:
+    def __init__(self, port='COM3', baudrate=9600, timeout=.1) -> None:
         self._port = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
         self.buffer_size = 12800
         self._port.set_buffer_size(rx_size = self.buffer_size, tx_size=self.buffer_size)
@@ -26,8 +26,10 @@ class SerialPort():
             while(self._port.in_waiting > 0):
                 readStr: str = self._port.readline().decode("utf-8").rstrip()
                 print(f"{cc.OKCYAN}[ARDUINO] {readStr}{cc.ENDC}")
+                return readStr
         else:
             print("Nothing to read.")
+            return None
 
     def write(self, x: bytes):
         assert(type(x) == bytes)
