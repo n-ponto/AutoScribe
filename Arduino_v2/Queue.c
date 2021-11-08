@@ -11,21 +11,25 @@ typedef struct queue {
     unsigned int sz;        // Size of the queue (count of elements)
 } Queue;
 
+void
 dequeue(Queue *q, void* out)
 {
 
 }
 
+void
 queue(Queue *q, void* in)
 {
 
 }
 
+void
 isEmpty(Queue *q)
 {
 
 }
 
+void
 isFull(Queue *q)
 {
 

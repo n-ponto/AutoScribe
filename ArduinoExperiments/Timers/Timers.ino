@@ -10,7 +10,7 @@ void setup()
 {
     Serial.begin(9600);
     Serial.println("Starting...");
-    Serial.println("Send a number to set the timer in milliseconds.")
+    Serial.println("Send a number to set the timer in milliseconds.");
     delay(3000);
     Timer1.initialize(RATE);
     Timer1.attachInterrupt(&timerISR);

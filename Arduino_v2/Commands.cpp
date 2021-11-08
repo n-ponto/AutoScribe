@@ -1,7 +1,12 @@
 /*
 Contains the implementations for all the commands that can be called from the 
 Accepting Commands mode
+
+All commands should be able to run in a deterministic amount of computations. They
+should be simple and have no loops or nested functions.
 */
+
+#include <TimerOne.h>
 
 #include "RuntimeModes.h"
 
@@ -34,18 +39,20 @@ void resetHome()
 void enterDrawMode()
 {
     // Set the runtime mode to drawing to be called from the main loop
-    runtime_mode = drawing;
+    Serial.println("Switching runtime mode to drawing.");
+    setRuntimeMode(drawing);
 }
 
 void enterManualControlMode()
 {
     // Set runtime mode to Manual Control to be called from the main loop
-    runtime_mode = manual_control;
+    setRuntimeMode(manual_control);
 }
 
 void setStepperDelay()
 {
     // Read two bytes for the time to delay pulses to the stepper
     // The time is measured in microseconds and should be in the range 500-1200ish
-    return;
+    unsigned short delay = 0;  // read 2 bytes from serial
+    Timer1.setPeriod(delay);
 }

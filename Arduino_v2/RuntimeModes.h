@@ -1,10 +1,10 @@
-#ifndef _ACCEPTING_COMMANDS_H
-#define _ACCEPTING_COMMANDS_H
-
-void (*runtime_mode)(void);  // The current runtime mode
+#ifndef RUNTIME_MODES_H_
+#define RUNTIME_MODES_H_
 
 void accepting_commands();
 void manual_control();
 void drawing();
 
-#endif //_ACCEPTING_COMMANDS_H
+void setRuntimeMode(void (*fn)(void));
+
+#endif //RUNTIME_MODES_H_

@@ -1,6 +1,10 @@
 #ifndef INSTRUCTION_QUEUE_H_
 #define INSTRUCTION_QUEUE_H_
 
+#ifndef INSTRUCTION_QUEUE_H_
+Serial.println("Hi");
+#endif
+
 #define QUEUE_SIZE 256
 
 // Possible commands that can be stored in the instruction queue

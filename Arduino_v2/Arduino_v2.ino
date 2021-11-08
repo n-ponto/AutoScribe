@@ -6,10 +6,16 @@ Contains:
 - list of functions for the runtime modes
 */
 
+#include <TimerOne.h>
 #include "RuntimeModes.h"
+
+void (*runtime_mode)(void);  // The current runtime mode
 
 void setup()
 {
+    Serial.begin(9600);
+    Serial.println("setup()");
+    Timer1.initialize(6000000);  // 6 seconds
     runtime_mode = accepting_commands;
 }
 
@@ -18,4 +24,9 @@ void loop()
 {
     // Call the function for the current runtime mode
     runtime_mode();
+}
+
+void setRuntimeMode(void (*fn)(void))
+{
+    runtime_mode = fn;
 }
