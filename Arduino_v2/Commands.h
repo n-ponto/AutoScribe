@@ -15,7 +15,7 @@ void setStepperDelay();     // 4    0000 0100
 // Weird gap is so we can check the 8 bit to see if  
 // we should switch out of accepting commands
 void enterDrawMode();       // 8    0000 1000
-void enterManualStepMode(); // 9    0000 1001
+void enterManualControlMode(); // 9    0000 1001
 
 void (*functions[])() = {
     setPenRange,            // 0
@@ -25,6 +25,6 @@ void (*functions[])() = {
     setStepperDelay,        // 4
     0, 0, 0,                // 5-7
     enterDrawMode,          // 8
-    enterManualStepMode};   // 9
+    enterManualControlMode};   // 9
 
 #endif // COMMANDS_H_

@@ -2,35 +2,54 @@
 Queue buffer implementation used by the Manual Control and Drawing modes
 - circular FIFO design
 - used to store instructions for drawing mode
+- head indicates the next item out, tail indicates the next empty spot
 */
+#include <string.h>
+#include "Queue.h"
 
-typedef struct queue {
-    unsigned char *buffer;  // Pointer to the start of the buffer
-    unsigned int front;     // Index of the next element in the queue
-    unsigned int end;       // Index of the next empty space in the queue
-    unsigned int sz;        // Size of the queue (count of elements)
-} Queue;
+void 
+queueInit(Queue *q, unsigned char *buffer, unsigned int memSz, unsigned int bufSz)
+{
+    q->buffer = buffer;
+    q->bufSz = bufSz;
+    q->memSz = memSz;
+
+    q->head = 0;
+    q->tail = 0;
+    q->curSz = 0;
+}
 
 void
 dequeue(Queue *q, void* out)
 {
-
+    if (q->curSz > 0)
+    {
+        unsigned char *addr = q->buffer + (q->head * q->memSz);
+        memcpy(out, addr, q->memSz);
+        q->head = (q->head + q->memSz) % q->bufSz;
+        q->curSz--;
+    } 
 }
 
 void
-queue(Queue *q, void* in)
+enqueue(Queue *q, void* in)
 {
-
+    unsigned char *addr = q->buffer + (q->tail * q->memSz);
+    memcpy(addr, in, q->memSz);
+    q->tail = (q->tail + q->memSz) % q->bufSz;
+    q->curSz++;
 }
 
-void
-isEmpty(Queue *q)
-{
-
-}
-
-void
+char
 isFull(Queue *q)
 {
+    // head should equal tail
+    return q->curSz * q->memSz == q->bufSz;
+}
 
+char
+isEmpty(Queue *q)
+{
+    // head should equal
+    return q->curSz == 0;
 }

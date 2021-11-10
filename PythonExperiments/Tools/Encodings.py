@@ -10,6 +10,6 @@ class Commands:
     MOVE_TO_COORDINATE =    2
     RESET_HOME =            3
     SET_STEPPER_DELAY =     4
-    ENTER_DRAW_MODE =       5
-    ENTER_MANUAL_STEP_MODE= 6
+    ENTER_DRAW_MODE =       8
+    ENTER_MANUAL_STEP_MODE= 9
     

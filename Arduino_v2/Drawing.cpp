@@ -3,28 +3,28 @@ Contains all code specific to the Manual Control runtime mode.
 */
 
 #include <TimerOne.h>
-// #include "RuntimeModes.h"
-
-#define DRAW_END
+#include "RuntimeModes.h"
+#include "Queue.h"
 
 #define POINTSZ 4
-#define PTADD(a, b) (a.X += b.X; a.Y += b.Y)
+#define BUFSZ   0x400
 
 typedef struct {
-    unsigned short X, Y;
+    short X, Y;
 } Point;
 
-void printBytes(char buf[4])
+Queue queue;
+unsigned char buffer[BUFSZ];
+
+void printPoint(Point *pt)
 {
-    Serial.print("Received ");
-    for (int i = 0; i < 4; i++)
-    {
-        Serial.print(buf[i], HEX);
-    }
-    Serial.println();
+    Serial.print("Received\tX 0x");
+    Serial.print(read.X, HEX);
+    Serial.print("\tY 0x");
+    Serial.println(read.Y, HEX);
 }
 
-void init_drawing();
+void start_drawing();
 void end_drawing();
 
 void drawing()
@@ -34,17 +34,27 @@ void drawing()
     // queue the instruction to be read by the interrupt
     
     // If the queue is full then stop reading
-    init_drawing();
-    Point read, current;
-    current = {0, 0};
-    char buf[POINTSZ];
+    start_drawing();
+    Point previous, read, change;
+    // Set the starting point to the origin
+    previous = {0, 0};  
     while (true)
     {
-        while(Serial.available() < 4) {}
-        Serial.readBytes(buf, POINTSZ);
-        printBytes(buf);
-        if (buf[0] & 0xFF)
+        while (isFull(queue))
+            delay(10); // Wait 10ms before checking again
+            
+        while(Serial.available() < POINTSZ) {}
+        Serial.readBytes((char *)&read, POINTSZ);
+        // Check for ending signal
+        if (read.X>>8 == 0xFF)
             break;
+        
+        // Calculate the change in position required from the previous move
+        change.X = read.X - current.X;
+        change.Y = read.Y - current.Y;
+        // Queue the change required
+        // Increase the current position
+        previous = read;
     }
     end_drawing();
 }
@@ -58,9 +68,10 @@ void drawing_interrupt()
     return;
 }
 
-void init_drawing()
+void start_drawing()
 {
     Serial.println("Starting drawing mode.");
+    queueInit(queue, sizeof(Point), BUFSZ, buffer);
     Timer1.attachInterrupt(drawing_interrupt);
     Timer1.start();
 }
@@ -69,6 +80,6 @@ void end_drawing()
 {
     Timer1.stop();
     Timer1.detachInterrupt();
-    // runtime_mode = accepting_commands;
+    setRuntimeMode(accepting_commands);
     Serial.println("Ending drawing mode.");
 }

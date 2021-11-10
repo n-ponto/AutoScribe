@@ -1,7 +1,7 @@
 import serial
 import time
 from struct import *
-from ConsoleColors import ConsoleColors as cc
+from PythonExperiments.Tools.ConsoleColors import ConsoleColors as cc
 
 class SerialPort():
 
@@ -26,7 +26,6 @@ class SerialPort():
             while(self._port.in_waiting > 0):
                 readStr: str = self._port.readline().decode("utf-8").rstrip()
                 print(f"{cc.OKCYAN}[ARDUINO] {readStr}{cc.ENDC}")
-                return readStr
         else:
             print("Nothing to read.")
             return None
@@ -35,8 +34,9 @@ class SerialPort():
         assert(type(x) == bytes)
         self._port.write(x)
 
-    def writeByte(self, x: int):
+    def writeByte(self, x: int, prt=False):
         assert(type(x) == int)
+        if prt: print("writing:", hex(x))
         self._port.write(pack("B", x))
 
     def writeShort(self, x: int):

@@ -16,9 +16,13 @@ void accepting_commands()
     // Call the function corresponding to that commmand
     // Function will handle reading more data from serial
     // Have functions for switching commands (change the runtime mode for the main loop)
+    unsigned char command = 0xFF; // Read byte from serial
     while (true)
     {
-        unsigned char command = 0; // Read byte from serial
+        while(!Serial.available()) {}
+        Serial.readBytes((char *)&command, 1);
+        Serial.print("Interpreting command 0x");
+        Serial.println(command, HEX);
         HANDLE(command);
         if (command & RUNTIME_CHANGE)
             break;
