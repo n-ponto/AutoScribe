@@ -24,7 +24,7 @@ dequeue(Queue *q, void* out)
 {
     if (q->curSz > 0)
     {
-        unsigned char *addr = q->buffer + (q->head * q->memSz);
+        unsigned char *addr = q->buffer + (q->head);
         memcpy(out, addr, q->memSz);
         q->head = (q->head + q->memSz) % q->bufSz;
         q->curSz--;
@@ -34,7 +34,7 @@ dequeue(Queue *q, void* out)
 void
 enqueue(Queue *q, void* in)
 {
-    unsigned char *addr = q->buffer + (q->tail * q->memSz);
+    unsigned char *addr = q->buffer + (q->tail);
     memcpy(addr, in, q->memSz);
     q->tail = (q->tail + q->memSz) % q->bufSz;
     q->curSz++;

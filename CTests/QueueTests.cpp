@@ -132,6 +132,43 @@ void efef()
     assert(isFull(&q), "full after enqueue");
 }
 
+void queueLongs()
+{
+    // Create a new queue
+    unsigned char size = 20;
+    unsigned char buffer[size*sizeof(long)];
+    Queue q; 
+    queueInit(&q, buffer, sizeof(long), size*sizeof(long));
+    assert(isEmpty(&q), "empty at start");
+    assert(!isFull(&q), "not full at start");
+
+    // Fill the queue
+    for (long i = 0; i < size; i++)
+    {
+        enqueue(&q, &i);
+    }
+    assert(!isEmpty(&q), "not empty after enqueue");
+    assert(isFull(&q), "full after enqueue");
+
+    // Empty the queue
+    long actual;
+    for (long i = 0; i < size; i++)
+    {
+        dequeue(&q, &actual);
+        assert(actual == i, "actual doesn't match expected");
+    }
+    assert(isEmpty(&q), "empty after dequeue");
+    assert(!isFull(&q), "not full after dequeue");
+
+    // Fill the queue again
+    for (long i = 0; i < size; i++)
+    {
+        enqueue(&q, &i);
+    }
+    assert(!isEmpty(&q), "not empty after enqueue");
+    assert(isFull(&q), "full after enqueue");
+}
+
 void crazy()
 {
     // Create a new queue
@@ -205,6 +242,7 @@ main(int argc, char *argv[])
         {queueMultiple, "queueMultiple"},
         {fillQueue,     "fillQueue"},
         {efef,          "efef"},
+        {queueLongs,    "queueLongs"},
         {crazy,         "crazy"},
         { 0, ""},
     };
