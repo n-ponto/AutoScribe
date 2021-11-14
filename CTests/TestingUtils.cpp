@@ -22,11 +22,11 @@ void runTests(struct test *tests)
 
     if(fail)
     {
-        std::cout << "SOME TESTS FAILED" << std::endl;
+        std::cout << "SOME TESTS FAILED\n\r" << std::endl;
         exit(1);
     }
 
-    std::cout << "ALL TESTS PASSED" << std::endl;
+    std::cout << "ALL TESTS PASSED\n\r" << std::endl;
 }
 
 void assert(char check, std::string message)

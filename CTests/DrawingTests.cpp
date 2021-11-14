@@ -16,7 +16,7 @@ void drawingInterrupt();
 
 typedef struct
 {
-    int16_t X, Y;
+    int16_t x, y;
 } Point;
 
 extern struct ds
@@ -89,6 +89,13 @@ void writesLowAfterHigh()
            "no step low after second call");
     assert(DigitalWriteCalls.bot.stp.lowCallCount == 1,
            "no step bottom low after second call");
+    assert(false, "should fail");
+}
+
+/****************** DRAWING TESTS ******************/
+void moveOne()
+{
+    return;
 }
 
 int main(int argc, char *argv[])
@@ -96,14 +103,13 @@ int main(int argc, char *argv[])
     drawingMockInit();
 
     struct test tests[] = {
-        {writesLowAfterHigh,   "writesLowAfterHigh"},
-        { 0, ""},
+        {writesLowAfterHigh, "writesLowAfterHigh"},
+        {0, ""},
     };
 
     printf("Drawing Tests Starting\n");
 
     runTests(tests);
-
 
     exit(0);
 }

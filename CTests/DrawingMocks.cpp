@@ -1,4 +1,5 @@
 #include <iostream>
+#include <queue>
 
 #include "DrawingMocks.h"
 #include "../Arduino_v2/Stepper.h"
@@ -6,6 +7,8 @@
 struct digitalWriteCalls DigitalWriteCalls;
 _Serial Serial;
 _Timer1 Timer1;
+
+std::queue<unsigned long> serialQueue; 
 
 void setRuntimeMode(void (*fn)())
 {
@@ -80,16 +83,16 @@ void digitalWrite(uint8_t pin, uint8_t val)
     struct action *m;
     switch (pin)
     {
-    case (DIR_TOP):
+    case (TOP_DIR_PIN):
         m = &DigitalWriteCalls.top.dir;
         break;
-    case (DIR_BOT):
+    case (BOT_DIR_PIN):
         m = &DigitalWriteCalls.bot.dir;
         break;
-    case (STEP_TOP):
+    case (TOP_STP_PIN):
         m = &DigitalWriteCalls.top.stp;
         break;
-    case (STEP_BOT):
+    case (BOT_STP_PIN):
         m = &DigitalWriteCalls.bot.stp;
         break;
     }

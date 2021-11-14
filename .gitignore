@@ -7,7 +7,9 @@ CNC_Shield_Demo
 test.py
 *\__pycache__
 
-
+# Makefile
+*.exe
+*.o
 
 # 3D Printing Models
 *.stl

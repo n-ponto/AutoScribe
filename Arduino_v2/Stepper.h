@@ -2,11 +2,11 @@
 #define STEPPER_H_
 
 // Pins on Arduino
-#define STEP_TOP 3
-#define DIR_TOP 6
-#define STEP_BOT 2
-#define DIR_BOT 5
-#define ENABLE 8
+#define TOP_STP_PIN 3
+#define TOP_DIR_PIN 6
+#define BOT_STP_PIN 2
+#define BOT_DIR_PIN 5
+#define ENABLE_PIN 8
 
 // Spin directions
 #define CW LOW

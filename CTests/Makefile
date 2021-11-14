@@ -7,8 +7,6 @@ ARD_DIR = ../Arduino_v2
 UTIL_OBJS = TestingUtils.o
 
 all: queue draw
-	./queue.exe
-	./draw.exe
 
 ######################### QUEUE ############################
 QUEUE_TEST_OBJS = QueueTests.o
@@ -17,6 +15,7 @@ QUEUE_OBJS = $(QUEUE_TEST_OBJS) $(QUEUE_ARD_OBJ) $(UTIL_OBJS)
 
 queue: $(QUEUE_OBJS)
 	${CC} ${CFLAGS} $^ -o $@
+	./queue.exe
 
 QueueTests.o: QueueTests.cpp
 	${CC} ${CFLAGS} -c QueueTests.cpp -o $@
@@ -31,6 +30,7 @@ DRAW_OBJS = $(DRAW_TEST_OBJS) $(DRAW_ARD_OBJ) $(QUEUE_ARD_OBJ) $(UTIL_OBJS)
 
 draw: $(DRAW_OBJS)
 	${CC} ${CFLAGS} $^ -o $@
+	./draw.exe
 
 # Arduino Drawing.cpp file
 $(DRAW_ARD_OBJ): $(ARD_DIR)/Drawing.cpp
