@@ -1,7 +1,7 @@
 #ifndef RUNTIME_MODES_H_
 #define RUNTIME_MODES_H_
 
-void accepting_commands();
+void acceptingCommands();
 void manual_control();
 void drawing();
 

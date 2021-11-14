@@ -28,13 +28,13 @@ def fillingWindow():
     window = tk.Tk()
 
     frame1 = tk.Frame(master=window, height=100, bg="red")
-    frame1.pack(fill=tk.X)
+    frame1.pack(fill=tk.x)
 
     frame2 = tk.Frame(master=window, height=50, bg="yellow")
-    frame2.pack(fill=tk.X)
+    frame2.pack(fill=tk.x)
 
     frame3 = tk.Frame(master=window, height=25, bg="blue")
-    frame3.pack(fill=tk.X)
+    frame3.pack(fill=tk.x)
 
     window.mainloop()
 
@@ -42,13 +42,13 @@ def packLeft():
     window = tk.Tk()
 
     frame1 = tk.Frame(master=window, width=200, height=100, bg="red")
-    frame1.pack(fill=tk.Y, side=tk.LEFT)
+    frame1.pack(fill=tk.y, side=tk.LEFT)
 
     frame2 = tk.Frame(master=window, width=100, bg="yellow")
-    frame2.pack(fill=tk.Y, side=tk.LEFT)
+    frame2.pack(fill=tk.y, side=tk.LEFT)
 
     frame3 = tk.Frame(master=window, width=50, bg="blue")
-    frame3.pack(fill=tk.Y, side=tk.LEFT)
+    frame3.pack(fill=tk.y, side=tk.LEFT)
 
     window.mainloop()
 

@@ -9,7 +9,7 @@ Contains all code specific to the Accepting Commands runtime mode.
 
 #include "Commands.h"
 
-void accepting_commands()
+void acceptingCommands()
 {
     Serial.println("Starting accepting commands runtime mode.");
     // Read a byte (command) from serial

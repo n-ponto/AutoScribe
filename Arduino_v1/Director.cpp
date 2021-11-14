@@ -148,12 +148,12 @@ void Director::localTravel(int16_t x, int16_t y)
     bool steep = absy > absx;
 
     // Set the output command
-    Direction x_chng, y_chng;
-    x_chng = back ? LEFT : RIGHT;
-    y_chng = down ? DOWN : UP;
+    Direction xChng, yChng;
+    xChng = back ? LEFT : RIGHT;
+    yChng = down ? DOWN : UP;
     Direction moveOne, moveBoth;
-    moveBoth = x_chng + y_chng;
-    moveOne = steep ? y_chng : x_chng;
+    moveBoth = xChng + yChng;
+    moveOne = steep ? yChng : xChng;
 
     // Check if need to switch x and y
     if (steep)
@@ -163,21 +163,21 @@ void Director::localTravel(int16_t x, int16_t y)
         absy = save;
     }
 
-    int16_t m, slope_error, c;
+    int16_t m, slopeError, c;
     m = 2 * absy;
-    slope_error = m - absx;
-    c = slope_error - absx;
+    slopeError = m - absx;
+    c = slopeError - absx;
     for (int16_t i = 0; i < absx; i++)
     {
-        if (slope_error >= 0)
+        if (slopeError >= 0)
         {
             move(moveBoth, 1);
-            slope_error += c;
+            slopeError += c;
         }
         else
         {
             move(moveOne, 1);
-            slope_error += m;
+            slopeError += m;
         }
     }
 }

@@ -32,7 +32,7 @@ def bresenhamN(x1,y1,x2, y2) -> list:
 
     m_new = 2 * abs(gy - y)
     x_diff = gx - x
-    slope_error_new = m_new - x_diff
+    slopeError_new = m_new - x_diff
     print("ending", x, y, gx, gy)
 
     while (x <= gx):
@@ -42,13 +42,13 @@ def bresenhamN(x1,y1,x2, y2) -> list:
             coords.append( (x, y) )
 
         # Add slope to increment angle formed
-        slope_error_new = slope_error_new + m_new
+        slopeError_new = slopeError_new + m_new
 
         # Slope error reached limit, time to
         # increment y and update slope error.
-        if (slope_error_new >= 0):
+        if (slopeError_new >= 0):
             y = y-1 if switch else y+1
-            slope_error_new = slope_error_new - 2 * x_diff
+            slopeError_new = slopeError_new - 2 * x_diff
         x+=1
 
     return coords  
@@ -56,7 +56,7 @@ def bresenhamN(x1,y1,x2, y2) -> list:
 def bresenham(x1,y1,x2, y2):
 
 	m_new = 2 * (y2 - y1)
-	slope_error_new = m_new - (x2 - x1)
+	slopeError_new = m_new - (x2 - x1)
 
 	y=y1
 	for x in range(x1,x2+1):
@@ -64,13 +64,13 @@ def bresenham(x1,y1,x2, y2):
 		print("(",x ,",",y ,")\n")
 
 		# Add slope to increment angle formed
-		slope_error_new =slope_error_new + m_new
+		slopeError_new =slopeError_new + m_new
 
 		# Slope error reached limit, time to
 		# increment y and update slope error.
-		if (slope_error_new >= 0):
+		if (slopeError_new >= 0):
 			y=y+1
-			slope_error_new =slope_error_new - 2 * (x2 - x1)
+			slopeError_new =slopeError_new - 2 * (x2 - x1)
 
 
 def bresenhamFromHere(xIn, yIn):
@@ -98,15 +98,15 @@ def bresenhamFromHere(xIn, yIn):
 
     m_new = 2 * abs(y)
     absx = abs(x)
-    slope_error_new = m_new - absx
-    c = slope_error_new - absx
+    slopeError_new = m_new - absx
+    c = slopeError_new - absx
     for i in range(absx):
-        if (slope_error_new >= 0): # change "y"
+        if (slopeError_new >= 0): # change "y"
             moves.append(changeVal)
-            slope_error_new += c
+            slopeError_new += c
         else: # don't change "y"
             moves.append(changeOne)
-            slope_error_new += m_new
+            slopeError_new += m_new
     
     return moves
 

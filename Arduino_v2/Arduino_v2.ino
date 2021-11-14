@@ -16,7 +16,7 @@ void setup()
     Serial.begin(9600);
     Serial.println("setup()");
     Timer1.initialize(6000000);  // 6 seconds
-    runtime_mode = accepting_commands;
+    runtime_mode = acceptingCommands;
 }
 
 // Always reading and buffering instructions from serial

@@ -136,7 +136,7 @@ class DrawingFrame(tk.Frame):
         btn_send = tk.Button(master=frm_bttns, text="Send", command=self.send)
         btn_clear.pack(side=tk.LEFT)
         btn_send.pack(side=tk.RIGHT)
-        frm_bttns.pack(fill=tk.X)
+        frm_bttns.pack(fill=tk.x)
         
 
 
