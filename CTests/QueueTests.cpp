@@ -4,16 +4,8 @@
 #include <iostream>
 #include <cstring>
 
+#include "TestingUtils.h"
 #include "../Arduino_v2/Queue.h"
-
-void assert(char check, std::string message)
-{
-    if (!check)
-    {
-        std::cout << "\n[ASSERT FAILURE]: " << message << std::endl;
-        throw std::exception();
-    }
-}
 
 void queueSingle()
 {
@@ -234,10 +226,7 @@ void crazy()
 int
 main(int argc, char *argv[])
 { 
-    struct test {
-        void (*f)();
-        std::string s;
-    } tests[] = {
+    struct test tests[] = {
         {queueSingle,   "queueSingle"},
         {queueMultiple, "queueMultiple"},
         {fillQueue,     "fillQueue"},
@@ -247,29 +236,8 @@ main(int argc, char *argv[])
         { 0, ""},
     };
 
-    printf("QueueTests starting\n");
-
-    int fail = 0;
-    for (struct test *t = tests; t->f != 0; t++) {
-        std::cout << t->s << ": ";
-        try
-        {
-            t->f(); // run the test
-            std::cout << "OK" << std::endl;
-        }
-        catch(const std::exception& e)
-        {
-            fail = 1;
-            std::cout << "FAIL" << std::endl;
-        }
-    }
-
-    if(fail)
-    {
-        std::cout << "SOME TESTS FAILED" << std::endl;
-        exit(1);
-    }
-
-    std::cout << "ALL TESTS PASSED" << std::endl;
+    printf("Queue Tests Starting\n");
+    runTests(tests);
+    
     exit(0);
 }

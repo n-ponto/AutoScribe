@@ -1,21 +1,46 @@
 CFLAGS = -Wall -O0 -g
 CC = g++
 
-OBJS_DIR = ./objs
+# File path to Arduino files
 ARD_DIR = ../Arduino_v2
+# Objects for testing utils
+UTIL_OBJS = TestingUtils.o
 
-all: queue
+all: queue draw
 	./queue.exe
+	./draw.exe
 
-queue: QueueTests.o Queue.o
-	${CC} ${CFLAGS} $(OBJS_DIR)/Queue.o $(OBJS_DIR)/QueueTests.o -o queue
+######################### QUEUE ############################
+QUEUE_TEST_OBJS = QueueTests.o
+QUEUE_ARD_OBJ = Queue.o
+QUEUE_OBJS = $(QUEUE_TEST_OBJS) $(QUEUE_ARD_OBJ) $(UTIL_OBJS)
 
-QueueTests.o: QueueTests.cpp 
-	mkdir -p $(OBJS_DIR)
-	${CC} ${CFLAGS} -c QueueTests.cpp -o $(OBJS_DIR)/$@
+queue: $(QUEUE_OBJS)
+	${CC} ${CFLAGS} $^ -o $@
 
-Queue.o: $(ARD_DIR)/Queue.c
-	cc ${CFLAGS} -c $(ARD_DIR)/Queue.c -o $(OBJS_DIR)/Queue.o
+QueueTests.o: QueueTests.cpp
+	${CC} ${CFLAGS} -c QueueTests.cpp -o $@
+
+$(QUEUE_ARD_OBJ): $(ARD_DIR)/Queue.c
+	cc ${CFLAGS} -c $(ARD_DIR)/Queue.c -o Queue.o
+
+######################### DRAWING ############################
+DRAW_TEST_OBJS = DrawingTests.o DrawingMocks.o
+DRAW_ARD_OBJ = Drawing.o
+DRAW_OBJS = $(DRAW_TEST_OBJS) $(DRAW_ARD_OBJ) $(QUEUE_ARD_OBJ) $(UTIL_OBJS)
+
+draw: $(DRAW_OBJS)
+	${CC} ${CFLAGS} $^ -o $@
+
+# Arduino Drawing.cpp file
+$(DRAW_ARD_OBJ): $(ARD_DIR)/Drawing.cpp
+	${CC} ${CFLAGS} -c $< -o $@ -DTESTING_MOCK
+
+######################### GENERAL ############################
+
+# For testing files from this directory
+%.o: %.cpp
+	${CC} ${CFLAGS} -c $< -o $@
 
 .PHONY: clean
 clean:
