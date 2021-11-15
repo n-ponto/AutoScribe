@@ -1,8 +1,12 @@
 #ifndef DRAWING_MOCKS_H_
 #define DRAWING_MOCKS_H_
 
+#include <iostream>
+#include <queue>
 #include <cstdint>
 #include <cstddef>
+
+#include "../Arduino_v2/Drawing.h"
 
 #define LOW 0x0
 #define HIGH 0x1
@@ -38,22 +42,23 @@ public:
 extern class _Timer1 Timer1;
 
 // Struct to keep track of calls to digital write
-struct action
+struct pin
 {
     unsigned int totalCallCount, highCallCount, lowCallCount;
 };
 struct motor
 {
-    struct action dir, stp;
+    struct pin dir, stp;
 };
 struct digitalWriteCalls
 {
     struct motor top, bot;
+    struct pin enable;
 };
 
 void delay(unsigned long);
 void digitalWrite(uint8_t pin, uint8_t val);
 
-void drawingMockInit();
+void resetDigitalWriteCalls();
 
 #endif //DRAWING_MOCKS_H_

@@ -11,6 +11,7 @@ struct test
 
 void runTests(struct test*);
 
+void assert(char check);
 void assert(char check, std::string message);
 
 #endif //TESTING_UTILS_H_

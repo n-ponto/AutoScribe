@@ -2,13 +2,14 @@
 #include <queue>
 
 #include "DrawingMocks.h"
+#include "../Arduino_v2/Drawing.h"
 #include "../Arduino_v2/Stepper.h"
 
 struct digitalWriteCalls DigitalWriteCalls;
 _Serial Serial;
 _Timer1 Timer1;
 
-std::queue<unsigned long> serialQueue; 
+std::queue<Point> *serialQueue;
 
 void setRuntimeMode(void (*fn)())
 {
@@ -44,12 +45,19 @@ void _Serial::println(unsigned long, int)
 
 int _Serial::available()
 {
-    return -1;
+    return serialQueue->size() * POINTSZ;
 }
 
 size_t _Serial::readBytes(char *buffer, size_t length)
 {
-    return 0;
+    if (length == POINTSZ)
+    {
+        Point pt = serialQueue->front();
+        memcpy(buffer, &pt, length);
+        serialQueue->pop();
+        return length;
+    }
+    return 0xFFFFFFFF;
 }
 
 void _Timer1::attachInterrupt(void (*isr)())
@@ -68,42 +76,41 @@ void _Timer1::stop()
 {
 }
 
-void drawingMockInit()
+void resetDigitalWriteCalls()
 {
     DigitalWriteCalls.top.dir = {0, 0, 0};
     DigitalWriteCalls.top.stp = {0, 0, 0};
     DigitalWriteCalls.bot.dir = {0, 0, 0};
     DigitalWriteCalls.bot.stp = {0, 0, 0};
+    DigitalWriteCalls.enable = {0, 0, 0};
 }
 
 void delay(unsigned long);
 
 void digitalWrite(uint8_t pin, uint8_t val)
 {
-    struct action *m;
+    struct pin *p;
     switch (pin)
     {
     case (TOP_DIR_PIN):
-        m = &DigitalWriteCalls.top.dir;
+        p = &DigitalWriteCalls.top.dir;
         break;
     case (BOT_DIR_PIN):
-        m = &DigitalWriteCalls.bot.dir;
+        p = &DigitalWriteCalls.bot.dir;
         break;
     case (TOP_STP_PIN):
-        m = &DigitalWriteCalls.top.stp;
+        p = &DigitalWriteCalls.top.stp;
         break;
     case (BOT_STP_PIN):
-        m = &DigitalWriteCalls.bot.stp;
+        p = &DigitalWriteCalls.bot.stp;
         break;
+    case (ENABLE_PIN):
+        p = &DigitalWriteCalls.enable;
+        break;
+    default:
+        std::cout << "[ERROR]: called with unexpected pin " << pin << std::endl;
+        exit(1);
     }
-
-    if (val)
-    {
-        m->highCallCount++;
-    }
-    else
-    {
-        m->lowCallCount++;
-    }
-    m->totalCallCount++;
+    val ? p->highCallCount++ : p->lowCallCount++;
+    p->totalCallCount++;
 }
