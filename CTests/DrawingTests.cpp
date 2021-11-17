@@ -11,9 +11,6 @@
 
 // Prototypes for Drawing.cpp functions for testing
 void drawing();
-void startDrawing();
-void drawingLoop();
-void endDrawing();
 void drawingInterrupt();
 
 /****************** STRUCTS FROM DRAWING.CPP ******************/
@@ -36,9 +33,13 @@ extern struct ns
     uint8_t newXDir, newYDir;
 } nextStep;
 
+extern const volatile bool continuedrawing();
+
 // Globals from the Mocks
 extern struct digitalWriteCalls DigitalWriteCalls;
 extern std::queue<Point> *serialQueue;
+extern bool continueDrawing;
+int drawLoopCounter;
 
 /****************** INTERRUPT TESTS ******************/
 
@@ -58,14 +59,14 @@ void writesLowAfterHigh()
     assert(DigitalWriteCalls.bot.dir.totalCallCount == 0,
            "save bottom direction after call");
 
-    assert(DigitalWriteCalls.top.stp.highCallCount == 1,
+    assert(DigitalWriteCalls.top.stp.high == 1,
            "step top after first call");
-    assert(DigitalWriteCalls.bot.stp.highCallCount == 1,
+    assert(DigitalWriteCalls.bot.stp.high == 1,
            "step bottom after first call");
 
-    assert(DigitalWriteCalls.top.stp.lowCallCount == 0,
+    assert(DigitalWriteCalls.top.stp.low == 0,
            "no step low after first call");
-    assert(DigitalWriteCalls.bot.stp.lowCallCount == 0,
+    assert(DigitalWriteCalls.bot.stp.low == 0,
            "no step bottom low after first call");
 
     // Should set the write value to LOW
@@ -80,14 +81,14 @@ void writesLowAfterHigh()
     assert(DigitalWriteCalls.bot.dir.totalCallCount == 0,
            "save bottom direction after second call");
 
-    assert(DigitalWriteCalls.top.stp.highCallCount == 1,
+    assert(DigitalWriteCalls.top.stp.high == 1,
            "step top after second call");
-    assert(DigitalWriteCalls.bot.stp.highCallCount == 1,
+    assert(DigitalWriteCalls.bot.stp.high == 1,
            "step bottom after second call");
 
-    assert(DigitalWriteCalls.top.stp.lowCallCount == 1,
+    assert(DigitalWriteCalls.top.stp.low == 1,
            "no step low after second call");
-    assert(DigitalWriteCalls.bot.stp.lowCallCount == 1,
+    assert(DigitalWriteCalls.bot.stp.low == 1,
            "no step bottom low after second call");
 }
 
@@ -101,6 +102,7 @@ void queuePoints(Point *pts, const int count)
         serialQueue->push(pts[i]);
     }
 }
+
 void emergencyStop()
 {
     resetDigitalWriteCalls();
@@ -109,9 +111,9 @@ void emergencyStop()
     serialQueue = &q;
     q.push(es);
     drawing();
-    assert(DigitalWriteCalls.enable.lowCallCount == 1,
+    assert(DigitalWriteCalls.enable.low == 1,
            "enable on start");
-    assert(DigitalWriteCalls.enable.highCallCount == 1,
+    assert(DigitalWriteCalls.enable.high == 1,
            "disable on end");
 }
 
@@ -122,13 +124,16 @@ void moveOneThenStop()
     std::queue<Point> q;
     serialQueue = &q;
     queuePoints(pts, 2);
-    
-    startDrawing();
-    drawingLoop();
+
+    drawLoopCounter = 1;
+    drawing();
+
     // Check enable on start
-    assert(DigitalWriteCalls.enable.lowCallCount == 1,
+    assert(DigitalWriteCalls.enable.low == 1,
            "enable on start");
+
     drawingInterrupt();
+
     assert(drawState.swapxy == false, "line not steep");
     // Dont change direction or step either motor
     assert(DigitalWriteCalls.top.dir.totalCallCount == 1);
@@ -142,17 +147,199 @@ void moveOneThenStop()
     assert(nextStep.write_value == HIGH);
 
     drawingInterrupt();
+
     assert(DigitalWriteCalls.top.dir.totalCallCount == 1);
     assert(DigitalWriteCalls.bot.dir.totalCallCount == 1);
-    assert(DigitalWriteCalls.top.stp.highCallCount == 1);
+    assert(DigitalWriteCalls.top.stp.high == 1);
     assert(DigitalWriteCalls.bot.stp.totalCallCount == 0);
 
     drawingInterrupt();
-    endDrawing();
 
     // Check ended
-    assert(DigitalWriteCalls.enable.highCallCount == 1,
+    assert(DigitalWriteCalls.enable.high == 1,
            "disable on end");
+}
+
+void horizontal()
+{
+    const int16_t dist = 10;
+    Point pts[] = {{dist, 0}, {STOP_DRAWING, 0}};
+    std::queue<Point> q;
+    serialQueue = &q;
+    queuePoints(pts, 2);
+
+    resetDigitalWriteCalls();
+    // Read in both points
+    assert(q.size() == 2);
+    drawLoopCounter = 2;
+    drawing();
+    assert(q.size() == 0);
+
+    while (continueDrawing)
+        drawingInterrupt();
+
+    // Never had to change directions
+    assert(DigitalWriteCalls.top.dir.totalCallCount == 1);
+    assert(DigitalWriteCalls.bot.dir.totalCallCount == 1);
+    // Never moved Y axis
+    assert(DigitalWriteCalls.bot.stp.totalCallCount == 0);
+    // Move X axis 10 times
+    assert(DigitalWriteCalls.top.stp.high == dist);
+    assert(DigitalWriteCalls.top.stp.low == dist);
+}
+
+void vertical()
+{
+    const int16_t dist = 17;
+    Point pts[] = {{0, dist}, {STOP_DRAWING, 0}};
+    std::queue<Point> q;
+    serialQueue = &q;
+    queuePoints(pts, 2);
+
+    // Read in both points
+    assert(q.size() == 2);
+    drawLoopCounter = 2;
+    drawing();
+    assert(q.size() == 0);
+
+    while (continueDrawing)
+        drawingInterrupt();
+
+    // Never had to change directions
+    assert(DigitalWriteCalls.top.dir.totalCallCount == 1);
+    assert(DigitalWriteCalls.bot.dir.totalCallCount == 1);
+    // Never moved X axis
+    assert(DigitalWriteCalls.top.stp.totalCallCount == 0);
+    // Move Y axis 10 times
+    assert(DigitalWriteCalls.bot.stp.high == dist);
+    assert(DigitalWriteCalls.bot.stp.low == dist);
+}
+
+void fortyFive()
+{
+    const int16_t dist = 7;
+    Point pts[] = {{dist, dist}, {STOP_DRAWING, 0}};
+    std::queue<Point> q;
+    serialQueue = &q;
+    queuePoints(pts, 2);
+
+    resetDigitalWriteCalls();
+    drawLoopCounter = 2;
+    drawing();
+
+    while (continueDrawing)
+        drawingInterrupt();
+
+    // Never had to change directions
+    assert(DigitalWriteCalls.top.dir.totalCallCount == 1);
+    assert(DigitalWriteCalls.bot.dir.totalCallCount == 1);
+    // Moved both axes
+    assert(DigitalWriteCalls.top.stp.high == dist);
+    assert(DigitalWriteCalls.top.stp.low == dist);
+    assert(DigitalWriteCalls.bot.stp.high == dist);
+    assert(DigitalWriteCalls.bot.stp.low == dist);
+}
+
+void slopeThird()
+{
+    const int16_t dist = 30;
+    Point pts[] = {{dist, dist / 3}, {STOP_DRAWING, 0}};
+    std::queue<Point> q;
+    serialQueue = &q;
+    queuePoints(pts, 2);
+
+    resetDigitalWriteCalls();
+    drawLoopCounter = 2;
+    drawing();
+
+    while (continueDrawing)
+    {
+        drawingInterrupt();
+        // Should always be more X axis steps than Y axis
+        assert(DigitalWriteCalls.top.stp.high >= DigitalWriteCalls.bot.stp.high,
+               "move X axis more than Y");
+        // Never be more than 3x as many steps for X axis
+        assert(DigitalWriteCalls.top.stp.high <= (DigitalWriteCalls.bot.stp.high + 1) * 3,
+               "X axis at most 3x steps as Y");
+    }
+
+    // Never had to change directions
+    assert(DigitalWriteCalls.top.dir.totalCallCount == 1);
+    assert(DigitalWriteCalls.bot.dir.totalCallCount == 1);
+    // Moved both axes
+    assert(DigitalWriteCalls.top.stp.high == dist);
+    assert(DigitalWriteCalls.top.stp.low == dist);
+    assert(DigitalWriteCalls.bot.stp.high == dist / 3);
+    assert(DigitalWriteCalls.bot.stp.low == dist / 3);
+}
+
+void slopeSteepThree()
+{
+    const int16_t dist = 30;
+    Point pts[] = {{dist / 3, dist}, {STOP_DRAWING, 0}};
+    std::queue<Point> q;
+    serialQueue = &q;
+    queuePoints(pts, 2);
+
+    resetDigitalWriteCalls();
+    drawLoopCounter = 2;
+    drawing();
+
+    while (continueDrawing)
+    {
+        drawingInterrupt();
+        // Should always be more Y axis steps than X axis
+        assert(DigitalWriteCalls.bot.stp.high >= DigitalWriteCalls.top.stp.high,
+               "move Y axis more than X");
+        // Never be more than 3x as many steps for Y axis
+        assert(DigitalWriteCalls.bot.stp.high <= (DigitalWriteCalls.top.stp.high + 1) * 3,
+               "Y axis at most 3x steps as X");
+    }
+
+    // Never had to change directions
+    assert(DigitalWriteCalls.bot.dir.totalCallCount == 1);
+    assert(DigitalWriteCalls.top.dir.totalCallCount == 1);
+    // Moved both axes
+    assert(DigitalWriteCalls.bot.stp.high == dist);
+    assert(DigitalWriteCalls.bot.stp.low == dist);
+    assert(DigitalWriteCalls.top.stp.high == dist / 3);
+    assert(DigitalWriteCalls.top.stp.low == dist / 3);
+}
+
+void weirdDiamond()
+{
+    const int numpts = 5;
+    Point pts[] = {
+        {21, 7},
+        {10, 29},
+        {7, 20},
+        {21, 7},
+        {STOP_DRAWING, 0}};
+
+    std::queue<Point> q;
+    serialQueue = &q;
+    queuePoints(pts, numpts);
+
+    resetDigitalWriteCalls();
+    assert(q.size() == numpts);
+    drawLoopCounter = 5;
+    drawing();
+    assert(q.size() == 0);
+
+    while (continueDrawing)
+        drawingInterrupt();
+
+    // Change X axis direction twice
+    assert(DigitalWriteCalls.top.dir.totalCallCount == 3);
+    // Change Y axis direction once
+    assert(DigitalWriteCalls.bot.dir.totalCallCount == 2);
+
+    // Move X axis
+    assert(DigitalWriteCalls.top.stp.high == 21 + 11 + 3 + 14);
+    assert(DigitalWriteCalls.top.stp.low == 21 + 11 + 3 + 14);
+    // Move Y axis
+    assert(DigitalWriteCalls.bot.stp.high == 7 + 22 + 9 + 13);
+    assert(DigitalWriteCalls.bot.stp.low == 7 + 22 + 9 + 13);
 }
 
 int main(int argc, char *argv[])
@@ -163,11 +350,15 @@ int main(int argc, char *argv[])
         {writesLowAfterHigh, "writesLowAfterHigh"},
         {emergencyStop, "emergencyStop"},
         {moveOneThenStop, "moveOneThenStop"},
+        {horizontal, "horizontal"},
+        {vertical, "vertical"},
+        {fortyFive, "fortyFive"},
+        {slopeThird, "slopeThird"},
+        {slopeSteepThree, "slopeSteepThree"},
+        {weirdDiamond, "weirdDiamond"},
         {0, ""}};
 
-    printf("Drawing Tests Starting\n");
-
-    runTests(tests);
+    runTests("Drawing", tests);
 
     exit(0);
 }

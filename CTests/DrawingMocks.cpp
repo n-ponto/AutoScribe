@@ -111,6 +111,6 @@ void digitalWrite(uint8_t pin, uint8_t val)
         std::cout << "[ERROR]: called with unexpected pin " << pin << std::endl;
         exit(1);
     }
-    val ? p->highCallCount++ : p->lowCallCount++;
+    val ? p->high++ : p->low++;
     p->totalCallCount++;
 }

@@ -44,7 +44,7 @@ extern class _Timer1 Timer1;
 // Struct to keep track of calls to digital write
 struct pin
 {
-    unsigned int totalCallCount, highCallCount, lowCallCount;
+    unsigned int totalCallCount, high, low;
 };
 struct motor
 {

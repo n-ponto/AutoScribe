@@ -9,7 +9,7 @@ struct test
     std::string s;
 };
 
-void runTests(struct test*);
+void runTests(std::string title, struct test *tests);
 
 void assert(char check);
 void assert(char check, std::string message);

@@ -2,12 +2,13 @@
 Contains all code specific to the Drawing runtime mode.
 */
 
-#ifndef TESTING_MOCK
+#ifndef TESTING
 #include <TimerOne.h>
 #include "RuntimeModes.h"
 #else
+extern int drawLoopCounter;
 #include "../CTests/DrawingMocks.h"
-#endif //TESTING_MOCK
+#endif //TESTING
 #include "Queue.h"
 #include "Stepper.h"
 #include "Drawing.h"
@@ -66,7 +67,7 @@ void initDrawState(Point *pt)
     drawState.m = 2 * absy;
     drawState.slopeError = drawState.m - drawState.absx;
     drawState.c = drawState.slopeError - drawState.absx;
-
+    drawState.i = 0;
     drawState.pt = *pt;
 }
 
@@ -80,7 +81,7 @@ void drawingInterrupt()
         digitalWrite(TOP_DIR_PIN, nextStep.newXDir);
         nextStep.changeXDir = false;
     }
-    if (nextStep.newYDir)
+    if (nextStep.changeYDir)
     {
         digitalWrite(BOT_DIR_PIN, nextStep.newYDir);
         nextStep.changeYDir = false;
@@ -192,7 +193,10 @@ void drawingLoop()
         if (read.x == EMERGENCY_STOP)
             break;
         if (read.x == STOP_DRAWING)
+        {
             enqueue(&queue, &read);
+            return;
+        }
 
         // Queue the change from previous coordinate
         change.x = read.x - previous.x;
@@ -200,8 +204,9 @@ void drawingLoop()
         enqueue(&queue, &change);
 
         previous = read; // Update the previous position
-#ifdef TESTING_MOCK
-        return;
+#ifdef TESTING
+        if (--drawLoopCounter < 1)
+            return;
 #endif
     }
 }

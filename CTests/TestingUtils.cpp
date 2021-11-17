@@ -3,8 +3,9 @@
 
 #include "TestingUtils.h"
 
-void runTests(struct test *tests)
+void runTests(std::string title, struct test *tests)
 {
+    std::cout << "\n\r*** " << title << " Tests ***\n\r" << std::endl;
     int fail = 0;
     for (struct test *t = tests; t->f != 0; t++) {
         std::cout << t->s << ": ";
@@ -37,7 +38,7 @@ void assertionFailure(std::string message)
 
 void assert(char check)
 {
-    assert(check, "blank message");
+    assert(check, "no message, set gdb breakpoint at \"assertionFailure()\" function.");
 }
 
 void assert(char check, std::string message)

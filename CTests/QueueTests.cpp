@@ -236,8 +236,7 @@ main(int argc, char *argv[])
         { 0, ""},
     };
 
-    printf("Queue Tests Starting\n");
-    runTests(tests);
+    runTests("Queue", tests);
     
     exit(0);
 }
