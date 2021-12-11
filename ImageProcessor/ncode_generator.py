@@ -1,32 +1,32 @@
 import os, sys
+import numpy as np
 
 from image_to_lines import *
 
 default_save_name = "file"
 
-def in_range(x1, y1, px, py, smoothing_factor):
-    x_in = px - smoothing_factor <= x1 <= px + smoothing_factor
-    y_in = py - smoothing_factor <= y1 <= py + smoothing_factor
+def in_range(pt, prev, smoothing_factor):
+    x_in = prev[0] - smoothing_factor <= pt[0] <= prev[0] + smoothing_factor
+    y_in = prev[1] - smoothing_factor <= pt[1] <= prev[1] + smoothing_factor
     return x_in and y_in
 
 # Takes a list of lines and stores the data into a file
 # lines - a list of lines to store
 # savename - the name of the file to save
 # smoothing_factor - allowed space between lines without picking up pen
-def generate_ncode(lines, savename, smoothing_factor = 2):
+def generate_ncode(lines, savename):
     # Create the new file for the ncode
     filepath: str = os.path.abspath(savename) + ".ncode"
     file = open(filepath, "x")
 
-    px, py = 0, 0  # prev point ending
-    for row in lines:
-        x1, y1, x2, y2 = row[0]
-        gap = not in_range(x1, y1, px, py, smoothing_factor)
+    prev = (0, 0)  # prev point ending
+    for start, end in lines:
+        gap = not in_range(start, prev, 2)
 
         if gap: file.write("UP\n")
-        file.write(f"{x1} {y1}\n")
+        file.write(f"{start[0]} {start[1]}\n")
         if gap: file.write("DN\n")
-        file.write(f"{x2} {y2}\n")
+        file.write(f"{end[0]} {end[1]}\n")
 
     print("Saving to path: " + filepath)
 
@@ -36,7 +36,7 @@ def generate_ncode(lines, savename, smoothing_factor = 2):
 
 if __name__ == '__main__':
     # Check correct arguments
-    if (len(sys.argv) < 3):
+    if (len(sys.argv) < 2):
         warning('Usage: python ncode_generator.py path\\to\\image.jpg')
         exit()
 
