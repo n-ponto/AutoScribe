@@ -4,14 +4,20 @@ Contains all code specific to the Drawing runtime mode.
 
 #ifndef TESTING
 #include <TimerOne.h>
+#include <Servo.h>
 #include "RuntimeModes.h"
 #else
 extern int drawLoopCounter;
 #include "../CTests/DrawingMocks.h"
 #endif //TESTING
 #include "Queue.h"
-#include "Stepper.h"
+#include "Hardware.h"
 #include "Drawing.h"
+
+// #define VERBOSE_DEBUG
+
+extern Servo penServo;
+extern uint8_t penUpAngle, penDownAngle;
 
 // Current state of the line drawing algorithm
 // between calls to the drawing interrupt
@@ -32,6 +38,7 @@ struct ns
     uint8_t stepPin, writeVal;   // Pin 'stepPin' to write 'writeVal' to
     bool changeXDir, changeYDir; // Should change x or y motors' direction
     uint8_t newXDir, newYDir;    // New direction for each motor
+    bool movePen, penUp;
 } nextStep;
 
 unsigned char buffer[BUFSZ];   // Data area for the queue
@@ -49,7 +56,7 @@ void printPoint(Point *pt)
 // Set up the drawing state with new dequeued point
 void initDrawState(Point *pt)
 {
-    bool back = pt->x < 0;
+    bool back = pt->x & NEG_BIT;
     bool down = pt->y < 0;
     int16_t absy;
     drawState.absx = back ? -1 * pt->x : pt->x;
@@ -74,7 +81,10 @@ void initDrawState(Point *pt)
 // Timer interrupt function
 void drawingInterrupt()
 {
-    /*************** STEP MOTORS ***************/
+    /*************** MOVE HARDWARE ***************/
+    // Move pen
+    if (nextStep.movePen)
+        nextStep.penUp ? penServo.write(penUpAngle) : penServo.write(penDownAngle);
     // Change stepper directions
     if (nextStep.changeXDir)
     {
@@ -110,25 +120,39 @@ void drawingInterrupt()
     if (drawState.i >= drawState.absx)
     {
         // Dequeue a new point
-        Point newPt;
+        Point newPt = {0, 0};
+        if (isEmpty(&queue)) // If the queue is empty
+            return;          // Check again during the next interrupt
         dequeue(&queue, &newPt);
+
         // Check for stop signal
-        if (newPt.x == STOP_DRAWING)
+        if (newPt.x & STOP_DRAWING)
         {
             continueDrawing = false;
             return;
         }
+
+        // Check flags for moving the pen
+        nextStep.movePen = newPt.x & MOVE_PEN;
+        nextStep.penUp = newPt.x & PEN_UP;
+
+        newPt.x = CONVERT_ETS(newPt.x); // Convert from eleven to sixteen bit number
+
+#ifdef VERBOSE_DEBUG
+        printf("Dequeue point: (%d, %d) movePen=%d penUp=%d\n", newPt.x, newPt.y, nextStep.movePen, nextStep.penUp);
+#endif
+
         // Compare x's, if different sign then change stepper direction for new point
         if (DIFF_SIGN(drawState.pt.x, newPt.x))
         {
             nextStep.changeXDir = true;
-            nextStep.newXDir = newPt.x >= 0 ? CW : CCW;
+            nextStep.newXDir = newPt.x & NEG_BIT ? CCW : CW;
         }
         // Compare y's, if different sign then change stepper direction for new point
         if (DIFF_SIGN(drawState.pt.y, newPt.y))
         {
             nextStep.changeYDir = true;
-            nextStep.newYDir = newPt.y >= 0 ? CW : CCW;
+            nextStep.newYDir = newPt.y & NEG_BIT ? CCW : CW;
         }
         // Initialize the drawing state for the next coordinate
         initDrawState(&newPt);
@@ -158,9 +182,10 @@ void startDrawing()
     continueDrawing = true;                          // Loop drawing mode
     nextStep = {0, LOW, false, false, 0, 0};         // Clear next motor commands
     drawState = {0, 0, 0, 0, 0};                     // Clear drawing state
-    digitalWrite(ENABLE_PIN, LOW);                   // Enable stepper motors
+    digitalWrite(ENABLE_PIN, ENABLE_STEPPERS);       // Enable stepper motors
     digitalWrite(TOP_DIR_PIN, CW);                   // Initialize both steppers
     digitalWrite(BOT_DIR_PIN, CW);
+    penServo.write(penUpAngle);               // Start the pen up
     Timer1.attachInterrupt(drawingInterrupt); // Set interrupt function
     Timer1.start();                           // Start the timer interrupt
 }
@@ -168,17 +193,19 @@ void startDrawing()
 // Clean up when drawing mode ends
 void endDrawing()
 {
-    Timer1.stop();                     // Stop the timer interrupt
-    Timer1.detachInterrupt();          // Remove the interrupt function
-    digitalWrite(ENABLE_PIN, HIGH);    // Disable stepper motors
-    setRuntimeMode(acceptingCommands); // Return to Accepting Commands
+    Timer1.stop();                              // Stop the timer interrupt
+    Timer1.detachInterrupt();                   // Remove the interrupt function
+    digitalWrite(ENABLE_PIN, DISABLE_STEPPERS); // Disable stepper motors
+    setRuntimeMode(acceptingCommands);          // Return to Accepting Commands
     Serial.println("Ending drawing mode.");
 }
 
 void drawingLoop()
 {
     Point previous, read, change;
+    read = {0, 0};
     previous = {0, 0}; // Starts at the origin
+    uint16_t flags;
     while (continueDrawing)
     {
         while (isFull(&queue))
@@ -192,16 +219,19 @@ void drawingLoop()
         Serial.readBytes((char *)&read, POINTSZ);
         if (read.x == EMERGENCY_STOP)
             break;
-        if (read.x == STOP_DRAWING)
-        {
-            enqueue(&queue, &read);
-            return;
-        }
+
+        // Strip the flags and convert to 16 bit 2's compliment encoding
+        flags = read.x & FLAG_MASK;
+        read.x = CONVERT_ETS(read.x);
 
         // Queue the change from previous coordinate
-        change.x = read.x - previous.x;
+        change.x = (read.x - previous.x) & ~FLAG_MASK; // Convert back into eleven bit encoding
         change.y = read.y - previous.y;
+        change.x |= flags; // add the flags back to the change
         enqueue(&queue, &change);
+#ifdef VERBOSE_DEBUG
+        printf("Enqueue point: (%d, %d) movePen=%d penUp=%d\n", CONVERT_ETS(change.x), change.y, change.x & MOVE_PEN, change.x & PEN_UP);
+#endif
 
         previous = read; // Update the previous position
 #ifdef TESTING

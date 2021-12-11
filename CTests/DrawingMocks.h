@@ -13,9 +13,15 @@
 
 #define HEX 16
 
-void setRuntimeMode(void(*fn)());
+void setRuntimeMode(void (*fn)());
 void acceptingCommands();
 void delay(int);
+
+class Servo
+{
+public:
+    void write(const uint8_t angle);
+};
 
 class _Serial
 {
@@ -60,5 +66,11 @@ void delay(unsigned long);
 void digitalWrite(uint8_t pin, uint8_t val);
 
 void resetDigitalWriteCalls();
+
+void resetCanvas();
+void saveCanvas(const char *imageFileName);
+void testCanvas();
+void resetDigitalWriteCalls();
+void initMock();
 
 #endif //DRAWING_MOCKS_H_

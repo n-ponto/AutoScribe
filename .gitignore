@@ -10,6 +10,7 @@ test.py
 # Makefile
 *.exe
 *.o
+*.bmp
 
 # 3D Printing Models
 *.stl

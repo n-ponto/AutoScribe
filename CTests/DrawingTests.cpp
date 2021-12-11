@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstring>
 
-#include "../Arduino_v2/Stepper.h"
+#include "../Arduino_v2/Hardware.h"
 #include "../Arduino_v2/Drawing.h"
 #include "DrawingMocks.h"
 #include "TestingUtils.h"
@@ -45,6 +45,8 @@ int drawLoopCounter;
 
 void writesLowAfterHigh()
 {
+    initMock();
+
     drawState = {0, 0, 0, 0, 0};
     nextStep.write_value = HIGH;
     nextStep.changeXDir = false;
@@ -92,11 +94,11 @@ void writesLowAfterHigh()
            "no step bottom low after second call");
 }
 
-/****************** DRAWING TESTS ******************/
+/******************************* DRAWING TESTS ******************************/
 
 void queuePoints(Point *pts, const int count)
 {
-    resetDigitalWriteCalls();
+    initMock();
     for (int i = 0; i < count; i++)
     {
         serialQueue->push(pts[i]);
@@ -105,7 +107,7 @@ void queuePoints(Point *pts, const int count)
 
 void emergencyStop()
 {
-    resetDigitalWriteCalls();
+    initMock();
     Point es = {0x7FFF, 0};
     std::queue<Point> q;
     serialQueue = &q;
@@ -119,7 +121,7 @@ void emergencyStop()
 
 void moveOneThenStop()
 {
-    resetDigitalWriteCalls();
+    initMock();
     Point pts[] = {{1, 0}, {STOP_DRAWING, 0}};
     std::queue<Point> q;
     serialQueue = &q;
@@ -168,7 +170,7 @@ void horizontal()
     serialQueue = &q;
     queuePoints(pts, 2);
 
-    resetDigitalWriteCalls();
+    initMock();
     // Read in both points
     assert(q.size() == 2);
     drawLoopCounter = 2;
@@ -223,7 +225,7 @@ void fortyFive()
     serialQueue = &q;
     queuePoints(pts, 2);
 
-    resetDigitalWriteCalls();
+    initMock();
     drawLoopCounter = 2;
     drawing();
 
@@ -248,7 +250,7 @@ void slopeThird()
     serialQueue = &q;
     queuePoints(pts, 2);
 
-    resetDigitalWriteCalls();
+    initMock();
     drawLoopCounter = 2;
     drawing();
 
@@ -281,7 +283,7 @@ void slopeSteepThree()
     serialQueue = &q;
     queuePoints(pts, 2);
 
-    resetDigitalWriteCalls();
+    initMock();
     drawLoopCounter = 2;
     drawing();
 
@@ -306,12 +308,12 @@ void slopeSteepThree()
     assert(DigitalWriteCalls.top.stp.low == dist / 3);
 }
 
-void weirdDiamond()
+void triangle()
 {
     const int numpts = 5;
     Point pts[] = {
         {21, 7},
-        {10, 29},
+        {10 | (MOVE_PEN), 29},  // pen down
         {7, 20},
         {21, 7},
         {STOP_DRAWING, 0}};
@@ -320,45 +322,146 @@ void weirdDiamond()
     serialQueue = &q;
     queuePoints(pts, numpts);
 
-    resetDigitalWriteCalls();
-    assert(q.size() == numpts);
+    initMock();
+    assert(q.size() == numpts, "initial queue size matches numpts");
     drawLoopCounter = 5;
+    drawing();
+    assert(q.size() == 0, "queue emptied by drawing loop");
+
+    while (continueDrawing)
+        drawingInterrupt();
+
+    assert(DigitalWriteCalls.top.dir.totalCallCount == 3, "Change X axis direction twice");
+    assert(DigitalWriteCalls.bot.dir.totalCallCount == 2, "Change Y axis direction once");
+
+    assert(DigitalWriteCalls.top.stp.high == 21 + 11 + 3 + 14, "X axis step high");
+    assert(DigitalWriteCalls.top.stp.low == 21 + 11 + 3 + 14, "X axis step low");
+
+    assert(DigitalWriteCalls.bot.stp.high == 7 + 22 + 9 + 13, "Y axis step high");
+    assert(DigitalWriteCalls.bot.stp.low == 7 + 22 + 9 + 13, "Y axis step low");
+}
+
+/******************************* VISUALIZATION ******************************/
+
+void vizN()
+{
+    const int numpts = 5;
+    Point pts[] = {
+        {100, 100},
+        {100 | (MOVE_PEN), 200},
+        {200, 100},
+        {200, 200},
+        {STOP_DRAWING, 0}};
+    std::queue<Point> q;
+    serialQueue = &q;
+    queuePoints(pts, numpts);
+
+    initMock();
+    drawLoopCounter = numpts;
     drawing();
     assert(q.size() == 0);
 
     while (continueDrawing)
         drawingInterrupt();
+}
 
-    // Change X axis direction twice
-    assert(DigitalWriteCalls.top.dir.totalCallCount == 3);
-    // Change Y axis direction once
-    assert(DigitalWriteCalls.bot.dir.totalCallCount == 2);
+void vizNoah()
+{
+    const int numpts = 21;
+    Point pts[] = {
+        // N
+        {100, 100},
+        {100 | (MOVE_PEN), 200}, // put pen down then move
+        {200, 100},
+        {200, 200},
+        // O
+        {(MOVE_PEN) | (PEN_UP) | 210, 100}, 
+        {(MOVE_PEN) | 310, 100},
+        {310, 200},
+        {210, 200},
+        {210, 100},
+        // A
+        {(MOVE_PEN) | (PEN_UP) | 320, 100}, 
+        {(MOVE_PEN) | 370, 200},
+        {429, 100}, // bottom right
+        {(MOVE_PEN) | (PEN_UP) | 320, 140},
+        {(MOVE_PEN) | 420, 140},
+        // H
+        {(MOVE_PEN) | (PEN_UP) | 430, 200},  // left line
+        {(MOVE_PEN) | 430, 100},
+        {(MOVE_PEN) | (PEN_UP) | 530, 200},  // right line
+        {(MOVE_PEN) | 530, 100},
+        {(MOVE_PEN) | (PEN_UP) | 430, 150},  // horizontal line
+        {(MOVE_PEN) | 530, 150},
+        {STOP_DRAWING, 0}};
+    std::queue<Point> q;
+    serialQueue = &q;
+    queuePoints(pts, numpts);
+    assert(q.size() == numpts, "initial queue size matches numpts");
+    initMock();
+    drawLoopCounter = numpts;
+    drawing();
+    assert(q.size() == 0);
 
-    // Move X axis
-    assert(DigitalWriteCalls.top.stp.high == 21 + 11 + 3 + 14);
-    assert(DigitalWriteCalls.top.stp.low == 21 + 11 + 3 + 14);
-    // Move Y axis
-    assert(DigitalWriteCalls.bot.stp.high == 7 + 22 + 9 + 13);
-    assert(DigitalWriteCalls.bot.stp.low == 7 + 22 + 9 + 13);
+    while (continueDrawing)
+        drawingInterrupt();
+}
+
+void runVizualization(char * arg)
+{
+    std::string argstr = std::string(arg);
+    std::cout << "Searching for viz function \"" << argstr << "\"\n";
+    struct test images[] = {
+        {vizN, "vizN"},
+        {vizNoah, "vizNoah"},
+        {0, ""}};
+    
+    // Check if string matches any of the viz functions
+    for (struct test *t = images; t->f != 0; t++)
+        if (t->s.compare(argstr) == 0)
+        {
+            std::cout << "Vizualizing " << t->s << std::endl;
+            t->f(); // Run the vizualization
+            std::string savePath = t->s.append(".bmp");
+            saveCanvas(savePath.c_str());
+            std::cout << "Done creating " << savePath << std::endl;
+            return;
+        }
+    
+    std::cout << "ERROR: couldn't find viz function for \"" << argstr << "\"\n";
+    std::cout << "Valid functions: ";
+    for (struct test *t = images; t->f != 0; t++)
+        std::cout << t->s;
+    std::cout << std::endl;
+ 
 }
 
 int main(int argc, char *argv[])
 {
-    resetDigitalWriteCalls();
+    initMock();
 
-    struct test tests[] = {
-        {writesLowAfterHigh, "writesLowAfterHigh"},
-        {emergencyStop, "emergencyStop"},
-        {moveOneThenStop, "moveOneThenStop"},
-        {horizontal, "horizontal"},
-        {vertical, "vertical"},
-        {fortyFive, "fortyFive"},
-        {slopeThird, "slopeThird"},
-        {slopeSteepThree, "slopeSteepThree"},
-        {weirdDiamond, "weirdDiamond"},
-        {0, ""}};
+    if (argc < 2) // No other arguments passed
+    {
+        struct test tests[] = {
+            {writesLowAfterHigh, "writesLowAfterHigh"},
+            {emergencyStop, "emergencyStop"},
+            {moveOneThenStop, "moveOneThenStop"},
+            {horizontal, "horizontal"},
+            {vertical, "vertical"},
+            {fortyFive, "fortyFive"},
+            {slopeThird, "slopeThird"},
+            {slopeSteepThree, "slopeSteepThree"},
+            {triangle, "triangle"},
+            {0, ""}};
 
-    runTests("Drawing", tests);
+        runTests("Drawing", tests);
+    }
+    else // Vizualize argument passed
+    {
+        std::string input = argv[1];
+
+        runVizualization(argv[1]);
+    }
 
     exit(0);
 }

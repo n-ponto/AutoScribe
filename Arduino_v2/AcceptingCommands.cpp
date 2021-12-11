@@ -21,7 +21,7 @@ void acceptingCommands()
     {
         while(!Serial.available()) {}
         Serial.readBytes((char *)&command, 1);
-        Serial.print("Interpreting command 0x");
+        Serial.print("Received command 0x");
         Serial.println(command, HEX);
         HANDLE(command);
         if (command & RUNTIME_CHANGE)

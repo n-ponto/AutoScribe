@@ -16,11 +16,13 @@ def testEnterExitDrawingMode():
     # Write command to switch to drawing mode
     serial.writeByte(Commands.ENTER_DRAW_MODE, prt=True)
     print('waiting...')
-    time.sleep(2)  # Wait
+    time.sleep(4)  # Wait
     serial.read()
+
+    input("press enter to leave drawing mode")
 
     # Switch out of drawing mode
-    serial.writePoint(0xFF00, 0xFF00)
+    serial.writePoint(0x7FF0, 0)
     print('waiting...')
     time.sleep(2)
     serial.read()
@@ -29,7 +31,33 @@ def testEnterExitDrawingMode():
     time.sleep(2)
     serial.read()
 
-    serial._port.close()
+def testDrawTinySquare():
+    serial = SerialPort()
+    serial.awaitResponse()
+
+    points = [
+        (50, 0),
+        (50, 50),
+        (0, 50),
+        (0, 0),
+        (0x7FF0, 0)
+    ]
+
+    # Write command to switch to drawing mode
+    serial.writeByte(Commands.ENTER_DRAW_MODE, prt=True)
+    print("sent draw command")
+    print("waiting...")
+    time.sleep(2)
+    serial.read()
+
+    print("writing points")
+    for x, y in points:
+        serial.writePoint(x, y)
+    
+    print("waiting...")
+    time.sleep(2)
+    serial.read()
+
 
 
 if __name__ == '__main__':

@@ -5,8 +5,8 @@
 
 struct test
 {
-    void (*f)();
-    std::string s;
+    void (*f)();   // Function pointer to the test to run
+    std::string s; // Name of the test (should match function name)
 };
 
 void runTests(std::string title, struct test *tests);

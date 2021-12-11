@@ -26,7 +26,7 @@ $(QUEUE_ARD_OBJ): $(ARD_DIR)/Queue.c
 	cc ${CFLAGS} -c $(ARD_DIR)/Queue.c -o Queue.o
 
 ######################### DRAWING ############################
-DRAW_TEST_OBJS = DrawingTests.o DrawingMocks.o
+DRAW_TEST_OBJS = DrawingTests.o DrawingMocks.o Image.o
 DRAW_ARD_OBJ = Drawing.o
 DRAW_OBJS = $(DRAW_TEST_OBJS) $(DRAW_ARD_OBJ) $(QUEUE_ARD_OBJ) $(UTIL_OBJS)
 
@@ -45,4 +45,4 @@ $(DRAW_ARD_OBJ): $(ARD_DIR)/Drawing.cpp
 
 .PHONY: clean
 clean:
-	rm -r -f *.o *.exe $(OBJS_DIR)
+	rm -r -f *.o *.exe *.bmp $(OBJS_DIR)
