@@ -2,7 +2,7 @@
 #define DRAWING_H_
 
 #define POINTSZ 4   // Size of the point struct
-#define BUFSZ 0x400 // Size in bytes of buffer to allocate for FIFO Queue
+#define BUFSZ 0x1000 // Size in bytes of buffer to allocate for FIFO Queue
 
 /* 
 Point Encoding Layout:

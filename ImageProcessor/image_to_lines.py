@@ -56,20 +56,20 @@ def img_to_lines(img: np.ndarray):
 
     # Hough algorithm to get line endpoints from the edges
     lines = cv2.HoughLinesP(image=edges, 
-                            rho=1,           # Distance resolution of the accumulator in pixels. 
-                            theta=np.pi/360, # Angle resolution of the accumulator in radians.
-                            threshold=2,     # Accumulator threshold parameter. Only those lines are returned that get enough votes
-                            minLineLength=0, # Line segments shorter than that are rejected. 
-                            maxLineGap=0)    # Maximum allowed gap between points on the same line to link them.
+                            rho=2,           # Distance resolution of the accumulator in pixels. 
+                            theta=np.pi/180, # Angle resolution of the accumulator in radians.
+                            threshold=7,     # Accumulator threshold parameter. Only those lines are returned that get enough votes
+                            minLineLength=3, # Line segments shorter than that are rejected. 
+                            maxLineGap=10)    # Maximum allowed gap between points on the same line to link them.
     return lines
 
 
 if __name__ == '__main__':
-    sys.argv.append('.\\ImageProcessor\images\sample01.jpg')
+    sys.argv.append('.\\ImageProcessor\images\sample07.jpg')
 
     # Check correct arguments
     if (len(sys.argv) != 2):
-        warning('Usage: python simple path\\to\\image.jpg')
+        warning('Usage: python image_to_lines.py path\\to\\image.jpg')
         exit()
 
     # Open the file

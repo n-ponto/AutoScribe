@@ -14,7 +14,7 @@ extern int drawLoopCounter;
 #include "Hardware.h"
 #include "Drawing.h"
 
-// #define VERBOSE_DEBUG
+#define VERBOSE_DEBUG
 
 extern Servo penServo;
 extern uint8_t penUpAngle, penDownAngle;
@@ -121,8 +121,13 @@ void drawingInterrupt()
     {
         // Dequeue a new point
         Point newPt = {0, 0};
-        if (isEmpty(&queue)) // If the queue is empty
-            return;          // Check again during the next interrupt
+        if (isEmpty(&queue))
+        { // If the queue is empty
+#ifdef VERBOSE_DEBUG
+            printf("Buffer empty\n");
+#endif
+            return; // Check again during the next interrupt
+        }
         dequeue(&queue, &newPt);
 
         // Check for stop signal
@@ -209,7 +214,13 @@ void drawingLoop()
     while (continueDrawing)
     {
         while (isFull(&queue))
+        {
+#ifdef VERBOSE_DEBUG
+            printf("Buffer full\n");
+            return;
+#endif
             delay(10); // Wait 10ms before checking again
+        }
 
         // Wait for a point on serial
         while (Serial.available() < POINTSZ)

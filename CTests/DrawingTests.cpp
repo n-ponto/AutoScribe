@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <cstring>
+#include <fstream>
 
 #include "../Arduino_v2/Hardware.h"
 #include "../Arduino_v2/Drawing.h"
@@ -170,7 +171,6 @@ void horizontal()
     serialQueue = &q;
     queuePoints(pts, 2);
 
-    initMock();
     // Read in both points
     assert(q.size() == 2);
     drawLoopCounter = 2;
@@ -225,7 +225,6 @@ void fortyFive()
     serialQueue = &q;
     queuePoints(pts, 2);
 
-    initMock();
     drawLoopCounter = 2;
     drawing();
 
@@ -250,7 +249,6 @@ void slopeThird()
     serialQueue = &q;
     queuePoints(pts, 2);
 
-    initMock();
     drawLoopCounter = 2;
     drawing();
 
@@ -283,7 +281,6 @@ void slopeSteepThree()
     serialQueue = &q;
     queuePoints(pts, 2);
 
-    initMock();
     drawLoopCounter = 2;
     drawing();
 
@@ -322,7 +319,6 @@ void triangle()
     serialQueue = &q;
     queuePoints(pts, numpts);
 
-    initMock();
     assert(q.size() == numpts, "initial queue size matches numpts");
     drawLoopCounter = 5;
     drawing();
@@ -356,7 +352,6 @@ void vizN()
     serialQueue = &q;
     queuePoints(pts, numpts);
 
-    initMock();
     drawLoopCounter = numpts;
     drawing();
     assert(q.size() == 0);
@@ -398,11 +393,90 @@ void vizNoah()
     serialQueue = &q;
     queuePoints(pts, numpts);
     assert(q.size() == numpts, "initial queue size matches numpts");
-    initMock();
+
     drawLoopCounter = numpts;
     drawing();
     assert(q.size() == 0);
 
+    while (continueDrawing)
+        drawingInterrupt();
+}
+
+void vizFile()
+{
+    // Get file path from user
+    std::cout << "File path: ";
+    std::string filePath; //  = "sample07.ncode";
+    std::cin >> filePath;
+
+    // Open file
+    std::ifstream file;
+    file.open(filePath);
+
+    if (file.is_open())
+        std::cout << "Opened file: " << filePath << std::endl;
+    else
+    {
+        std::cout << "ERROR: couldn't open file" << std::endl;
+        return;
+    }
+
+    std::string line;
+    std::queue<Point> q;
+    serialQueue = &q;
+    bool movePen, penUp;
+    movePen = false;
+    penUp = false;
+    unsigned long estimatedSteps = 0;
+    uint16_t px, py;
+    px = py = 0;
+    while (std::getline(file, line))
+    {
+        if (line.compare("UP") == 0)
+        {
+            movePen = true;
+            penUp = true;
+        }
+        else if (line.compare("DN") == 0)
+        {
+            movePen = true;
+        }
+        else
+        {
+            int pos = line.find(" ");
+            assert(0 < pos && pos < 5, "space in range");
+            int16_t x, y;
+            x = stoi(line.substr(0, pos));
+            y = stoi(line.substr(pos+1, line.length()));
+            estimatedSteps += std::max(std::abs(x-px), std::abs(y-py));
+
+            // Encode the x value
+            x &= ~FLAG_MASK; // remove flag bits
+            if (movePen)
+            {
+                x |= MOVE_PEN;
+                if (penUp) {
+                    x |= PEN_UP;
+                }
+                movePen = penUp = false;
+            }
+
+            // std::cout << "X: " << x << " Y: " << y << std::endl;
+            Point newPt = {x, y};
+            q.push(newPt);
+        }
+    }
+    file.close();
+    q.push({STOP_DRAWING, 0});
+
+    std::cout << "Done generating queue of size " << q.size() << "\n";
+    std::cout << "Estimated steps " << estimatedSteps << std::endl;
+
+    drawLoopCounter = q.size();
+    drawing();
+    assert(q.size() == 0);
+
+    std::cout << "Running drawing interrupt\n";
     while (continueDrawing)
         drawingInterrupt();
 }
@@ -414,6 +488,7 @@ void runVizualization(char * arg)
     struct test images[] = {
         {vizN, "vizN"},
         {vizNoah, "vizNoah"},
+        {vizFile, "vizFile"},
         {0, ""}};
     
     // Check if string matches any of the viz functions
@@ -433,7 +508,6 @@ void runVizualization(char * arg)
     for (struct test *t = images; t->f != 0; t++)
         std::cout << t->s;
     std::cout << std::endl;
- 
 }
 
 int main(int argc, char *argv[])

@@ -7,6 +7,8 @@ CNC_Shield_Demo
 test.py
 *\__pycache__
 
+*.ncode
+
 # Makefile
 *.exe
 *.o
