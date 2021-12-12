@@ -1,3 +1,5 @@
+# Whole pipeline from starting with an image and showing drawing output
+
 image_file=$1
 save_file=testSaveFile.ncode
 
