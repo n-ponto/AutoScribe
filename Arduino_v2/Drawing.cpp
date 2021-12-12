@@ -14,7 +14,7 @@ extern int drawLoopCounter;
 #include "Hardware.h"
 #include "Drawing.h"
 
-#define VERBOSE_DEBUG
+// #define VERBOSE_DEBUG
 
 extern Servo penServo;
 extern uint8_t penUpAngle, penDownAngle;

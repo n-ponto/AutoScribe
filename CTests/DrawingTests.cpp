@@ -310,7 +310,7 @@ void triangle()
     const int numpts = 5;
     Point pts[] = {
         {21, 7},
-        {10 | (MOVE_PEN), 29},  // pen down
+        {10 | (MOVE_PEN), 29}, // pen down
         {7, 20},
         {21, 7},
         {STOP_DRAWING, 0}};
@@ -370,23 +370,23 @@ void vizNoah()
         {200, 100},
         {200, 200},
         // O
-        {(MOVE_PEN) | (PEN_UP) | 210, 100}, 
+        {(MOVE_PEN) | (PEN_UP) | 210, 100},
         {(MOVE_PEN) | 310, 100},
         {310, 200},
         {210, 200},
         {210, 100},
         // A
-        {(MOVE_PEN) | (PEN_UP) | 320, 100}, 
+        {(MOVE_PEN) | (PEN_UP) | 320, 100},
         {(MOVE_PEN) | 370, 200},
         {429, 100}, // bottom right
         {(MOVE_PEN) | (PEN_UP) | 320, 140},
         {(MOVE_PEN) | 420, 140},
         // H
-        {(MOVE_PEN) | (PEN_UP) | 430, 200},  // left line
+        {(MOVE_PEN) | (PEN_UP) | 430, 200}, // left line
         {(MOVE_PEN) | 430, 100},
-        {(MOVE_PEN) | (PEN_UP) | 530, 200},  // right line
+        {(MOVE_PEN) | (PEN_UP) | 530, 200}, // right line
         {(MOVE_PEN) | 530, 100},
-        {(MOVE_PEN) | (PEN_UP) | 430, 150},  // horizontal line
+        {(MOVE_PEN) | (PEN_UP) | 430, 150}, // horizontal line
         {(MOVE_PEN) | 530, 150},
         {STOP_DRAWING, 0}};
     std::queue<Point> q;
@@ -402,13 +402,8 @@ void vizNoah()
         drawingInterrupt();
 }
 
-void vizFile()
+void vizFile(char *filePath)
 {
-    // Get file path from user
-    std::cout << "File path: ";
-    std::string filePath; //  = "sample07.ncode";
-    std::cin >> filePath;
-
     // Open file
     std::ifstream file;
     file.open(filePath);
@@ -447,15 +442,16 @@ void vizFile()
             assert(0 < pos && pos < 5, "space in range");
             int16_t x, y;
             x = stoi(line.substr(0, pos));
-            y = stoi(line.substr(pos+1, line.length()));
-            estimatedSteps += std::max(std::abs(x-px), std::abs(y-py));
+            y = stoi(line.substr(pos + 1, line.length()));
+            estimatedSteps += std::max(std::abs(x - px), std::abs(y - py));
 
             // Encode the x value
             x &= ~FLAG_MASK; // remove flag bits
             if (movePen)
             {
                 x |= MOVE_PEN;
-                if (penUp) {
+                if (penUp)
+                {
                     x |= PEN_UP;
                 }
                 movePen = penUp = false;
@@ -479,18 +475,24 @@ void vizFile()
     std::cout << "Running drawing interrupt\n";
     while (continueDrawing)
         drawingInterrupt();
+    
+    std::string savePath = std::string(filePath);
+    int len = savePath.length();
+    savePath = savePath.substr(len-5, len).append(".bmp");
+
+    saveCanvas(savePath.c_str());
+    std::cout << "Done creating " << savePath << std::endl;
 }
 
-void runVizualization(char * arg)
+int runVizualization(char *arg)
 {
     std::string argstr = std::string(arg);
     std::cout << "Searching for viz function \"" << argstr << "\"\n";
     struct test images[] = {
         {vizN, "vizN"},
         {vizNoah, "vizNoah"},
-        {vizFile, "vizFile"},
         {0, ""}};
-    
+
     // Check if string matches any of the viz functions
     for (struct test *t = images; t->f != 0; t++)
         if (t->s.compare(argstr) == 0)
@@ -500,14 +502,11 @@ void runVizualization(char * arg)
             std::string savePath = t->s.append(".bmp");
             saveCanvas(savePath.c_str());
             std::cout << "Done creating " << savePath << std::endl;
-            return;
+            return 0;
         }
-    
-    std::cout << "ERROR: couldn't find viz function for \"" << argstr << "\"\n";
-    std::cout << "Valid functions: ";
-    for (struct test *t = images; t->f != 0; t++)
-        std::cout << t->s;
-    std::cout << std::endl;
+
+    std::cout << "Couldn't find viz function for \"" << argstr << "\"\n";
+    return -1;
 }
 
 int main(int argc, char *argv[])
@@ -534,7 +533,8 @@ int main(int argc, char *argv[])
     {
         std::string input = argv[1];
 
-        runVizualization(argv[1]);
+        if (runVizualization(argv[1]))
+            vizFile(argv[1]);
     }
 
     exit(0);
