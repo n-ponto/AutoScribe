@@ -36,15 +36,19 @@ class SerialPort():
 
     def writeByte(self, x: int, prt=False):
         assert(type(x) == int)
+        assert(0 <= x <= 255)
         if prt: print("writing:", hex(x))
         self._port.write(pack("B", x))
 
-    def writeShort(self, x: int):
+    def writeShort(self, x: int, prt=False):
         assert(type(x) == int)
+        assert(0 <= x <= 65535)
+        if prt: print("writing:", hex(x))
         self._port.write(pack("H", x))
 
-    def writePoint(self, x:int, y:int):
+    def writePoint(self, x:int, y:int, prt=False):
         assert(type(x)==int and type(y)==int)
+        if prt: print("writing: (", x, ",", y, ")")
         self._port.write(pack("HH", x, y))
 
 if __name__=='__main__':

@@ -19,6 +19,7 @@ void acceptingCommands()
     unsigned char command = 0xFF; // Read byte from serial
     while (true)
     {
+        Serial.println("Awaiting command...");
         while(!Serial.available()) {}
         Serial.readBytes((char *)&command, 1);
         Serial.print("Received command 0x");

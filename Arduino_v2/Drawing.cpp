@@ -219,13 +219,15 @@ void drawingLoop()
             printf("Buffer full\n");
             return;
 #endif
+            if (!continueDrawing)
+                return;
             delay(10); // Wait 10ms before checking again
         }
 
         // Wait for a point on serial
         while (Serial.available() < POINTSZ)
-        {
-        }
+            if (!continueDrawing)
+                return;
 
         Serial.readBytes((char *)&read, POINTSZ);
         if (read.x == EMERGENCY_STOP)

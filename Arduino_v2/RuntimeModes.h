@@ -2,9 +2,9 @@
 #define RUNTIME_MODES_H_
 
 void acceptingCommands();
-void manual_control();
+void manualControl();
 void drawing();
 
-void setRuntimeMode(void (*fn)(void));
+void setRuntimeMode(void (*fn)(void));  // Defined in Arduino_v2.c
 
 #endif //RUNTIME_MODES_H_

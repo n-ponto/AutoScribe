@@ -83,6 +83,9 @@ if __name__ == '__main__':
     img: np.ndarray
     img, _, _ = open_img(sys.argv[1])
 
+    if (img.shape[0] > 1200 or img.shape[1] > 800):
+        warning('This image could be too large to draw')
+
     lines = img_to_lines(img)
     lines = convert_origin_bottom(lines, img.shape[0])
     generate_ncode(lines, savename)

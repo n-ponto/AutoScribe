@@ -11,5 +11,11 @@ class Commands:
     RESET_HOME =            3
     SET_STEPPER_DELAY =     4
     ENTER_DRAW_MODE =       8
-    ENTER_MANUAL_STEP_MODE= 9
+    ENTER_MANUAL_CONTROL_MODE= 9
+
+class Drawing:
+    EMERGENCY_STOP = 0x7FFF  
+    MOVE_PEN =       (1 << 12)  # Should move the pen (down if PEN_UP == 0)
+    PEN_UP =         (1 << 13)  # Move the pen up or down
+    STOP_DRAWING =   (1 << 14)
     

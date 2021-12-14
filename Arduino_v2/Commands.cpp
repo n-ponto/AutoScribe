@@ -46,7 +46,8 @@ void enterDrawMode()
 void enterManualControlMode()
 {
     // Set runtime mode to Manual Control to be called from the main loop
-    setRuntimeMode(manual_control);
+    Serial.println("Switching runtime mode to manual control.");
+    setRuntimeMode(manualControl);
 }
 
 void setStepperDelay()
@@ -54,5 +55,11 @@ void setStepperDelay()
     // Read two bytes for the time to delay pulses to the stepper
     // The time is measured in microseconds and should be in the range 500-1200ish
     unsigned short delay = 0;  // read 2 bytes from serial
+    Serial.println("Waiting for stepper delay...");
+    while(Serial.available() < 2) {}
+    Serial.readBytes((char *)&delay, 2);
     Timer1.setPeriod(delay);
+    Serial.print("Stepper delay reset to ");
+    Serial.print(delay);
+    Serial.println("us");
 }

@@ -2,7 +2,7 @@
 #define DRAWING_H_
 
 #define POINTSZ 4   // Size of the point struct
-#define BUFSZ 0x1000 // Size in bytes of buffer to allocate for FIFO Queue
+#define BUFSZ 0x100 // Size in bytes of buffer to allocate for FIFO Queue
 
 /* 
 Point Encoding Layout:
@@ -22,15 +22,15 @@ need 11 bits to represent positive numbers,
 */
 
 // Encodings for commands within the coordiante pairs
-#define EMERGENCY_STOP 0x7FFF // Signal to stop drawing immediately
-#define FLAG_MASK (0b1111 << 12)
-#define MOVE_PEN (1 << 12)   // Signal to change the pen position
+#define EMERGENCY_STOP 0x7FFF  // Signal to stop drawing immediately
+#define MOVE_PEN (1 << 12)     // Signal to change the pen position
 #define PEN_UP (1 << 13)       // Indicates how to change the pen position
 #define STOP_DRAWING (1 << 14) // Signal to stop drawing when this point is reached
+#define FLAG_MASK (0b1111 << 12)
 
 // Converting from 11 to 16 bit twos compliment
 #define NEG_BIT (1 << 11)
-#define CONVERT_ETS(x) (((x) &(NEG_BIT)) ? (x) | FLAG_MASK : (x) & ~(FLAG_MASK))
+#define CONVERT_ETS(x) (((x) & (NEG_BIT)) ? (x) | FLAG_MASK : (x) & ~(FLAG_MASK))
 #define CONVERT_STE(x) ((x) &= ~FLAG_MASK)
 
 #define STEP_BOTH 0xFF // Encoding to step both the stepper motors

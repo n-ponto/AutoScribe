@@ -7,6 +7,7 @@ Contains:
 */
 
 #include <TimerOne.h>
+#include <Servo.h>
 #include "Hardware.h"
 #include "RuntimeModes.h"
 
@@ -28,15 +29,14 @@ void hardwareInit()
     // initialize the pen servo pin
     penUpAngle = DEFAULT_UP;
     penDownAngle = DEFAULT_UP;
-    servo.attach(SERVO_PIN);
-    servo.write(penUpAngle);
+    penServo.attach(SERVO_PIN);
+    penServo.write(penUpAngle);
 }
 
 void setup()
 {
     // Set up serial
     Serial.begin(9600);
-    Serial.println("setup()");
     // Initialize the timer (not start)
     Timer1.initialize(DEFAULT_DELAY); // 6 seconds
     runtime_mode = acceptingCommands;
