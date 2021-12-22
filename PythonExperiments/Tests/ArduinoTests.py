@@ -7,9 +7,8 @@ import sys
 import time
 p = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.append(p)
-from PythonExperiments.Tools.Encodings import *
 from PythonExperiments.Tools.SerialPort import SerialPort
-
+from PythonExperiments.Tools.Encodings import *
 
 
 def testEnterExitDrawingMode():

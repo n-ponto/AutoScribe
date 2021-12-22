@@ -30,7 +30,7 @@ def open_img(path: str):
     if (img is None):
         warning('Cannot open file')
         exit()
-    print(f"Opened image of size height={img.shape[0]}px x width={img.shape[1]}px")
+    print(f"Opened image \"{file_name}\" of size height={img.shape[0]}px by width={img.shape[1]}px")
     return img, file_name, folder
 
 
@@ -130,25 +130,27 @@ def img_to_lines(img: np.ndarray):
                       threshold2=200,
                       apertureSize=3,
                       L2gradient=True)
+    # _path = os.path.join(folder, f'{filename}_edges.jpg')
+    # cv2.imwrite(_path, edges)
 
     # Hough algorithm to get line endpoints from the edges
     lines = cv2.HoughLinesP(image=edges,
                             # Distance resolution of the accumulator in pixels.
-                            rho=2,
+                            rho=1,
                             # Angle resolution of the accumulator in radians.
                             theta=np.pi/180,
-                            threshold=7,     # Accumulator threshold parameter. Only those lines are returned that get enough votes
+                            threshold=20,     # Accumulator threshold parameter. Only those lines are returned that get enough votes
                             # Line segments shorter than that are rejected.
-                            minLineLength=3,
+                            minLineLength=30,
                             maxLineGap=10)    # Maximum allowed gap between points on the same line to link them.
 
     # Reformat weird output of hough lines algo
     formatted_lines = reformat_lines(lines)
-    return organize_lines(formatted_lines)
+    return formatted_lines #organize_lines(formatted_lines)
 
 
 if __name__ == '__main__':
-    sys.argv.append('.\\ImageProcessor\images\sample07.jpg')
+    sys.argv.append('.\\ImageProcessor\\images\\06.jpg')
 
     # Check correct arguments
     if (len(sys.argv) != 2):

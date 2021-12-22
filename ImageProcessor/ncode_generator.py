@@ -4,7 +4,7 @@ import numpy as np
 
 from image_to_lines import *
 
-default_save_name = "file"
+DEFAULT_SAVE_NAME = "file"
 
 
 def in_range(pt, prev, smoothing_factor):
@@ -38,14 +38,17 @@ def convert_origin_bottom(lines: list, height: int) -> list:
     return output
 
 
-def generate_ncode(lines, savename):
+def generate_ncode(lines: list, savename: str):
     '''
     Takes a list of lines and stores the data into a file
     lines - a list of lines to store
-    savename - the name of the file to save
-    smoothing_factor - allowed space between lines without picking up pen
+        format: [ ( (x1, y1), (x2, y2) ), ( (x3, y3), (x4, y4) ), ((...), (...)), ... ]
+    savename - the name of the file to save (should end in .ncode)
     '''
     # Create the new file for the ncode
+    if(savename[-6:] != ".ncode"):
+        print("Adding ncode file ending to save path.")
+        savename += ".ncode"
     filepath: str = os.path.abspath(savename)
     file = open(filepath, "x")
 
@@ -74,11 +77,7 @@ if __name__ == '__main__':
     if (len(sys.argv) >= 3):
         savename = sys.argv[2]
     else:
-        savename = default_save_name
-
-    if(savename[-6:] != ".ncode"):
-        print("Adding ncode file ending to save path.")
-        savename += ".ncode"
+        savename = DEFAULT_SAVE_NAME
 
     img: np.ndarray
     img, _, _ = open_img(sys.argv[1])

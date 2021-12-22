@@ -1,7 +1,8 @@
 import serial
-import time
+import sys, os, time
 from struct import *
-from PythonExperiments.Tools.ConsoleColors import ConsoleColors as cc
+sys.path.append(os.path.dirname(__file__ ) + "/..")
+from Tools.ConsoleColors import ConsoleColors as cc
 
 class SerialPort():
 

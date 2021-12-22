@@ -1,9 +1,8 @@
-import sys, os
+import sys, os, time
+from struct import *
 sys.path.append(os.path.dirname(__file__ ) + "/..")
 for path in sys.path:
     print(path)
-import time
-from struct import *
 from Tools.SerialPort import SerialPort
 
 number_commands: int = 6
