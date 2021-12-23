@@ -15,6 +15,7 @@ void (*runtime_mode)(void); // The current runtime mode
 
 Servo penServo;
 uint8_t penUpAngle, penDownAngle;
+uint16_t stepperDelay; // Microsecond delay between stepper pulses
 
 // Initialize the output pins for the stepper CNC sheild
 void hardwareInit()
@@ -38,7 +39,8 @@ void setup()
     // Set up serial
     Serial.begin(9600);
     // Initialize the timer (not start)
-    Timer1.initialize(DEFAULT_DELAY); // 6 seconds
+    stepperDelay = DEFAULT_STEPPER_DELAY;
+    Timer1.initialize(stepperDelay);
     runtime_mode = acceptingCommands;
     hardwareInit();
 }

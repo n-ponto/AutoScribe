@@ -120,49 +120,6 @@ void emergencyStop()
            "disable on end");
 }
 
-void moveOneThenStop()
-{
-    initMock();
-    Point pts[] = {{1, 0}, {STOP_DRAWING, 0}};
-    std::queue<Point> q;
-    serialQueue = &q;
-    queuePoints(pts, 2);
-
-    drawLoopCounter = 1;
-    drawing();
-
-    // Check enable on start
-    assert(DigitalWriteCalls.enable.low == 1,
-           "enable on start");
-
-    drawingInterrupt();
-
-    assert(drawState.swapxy == false, "line not steep");
-    // Dont change direction or step either motor
-    assert(DigitalWriteCalls.top.dir.totalCallCount == 1);
-    assert(DigitalWriteCalls.bot.dir.totalCallCount == 1);
-    assert(DigitalWriteCalls.top.stp.totalCallCount == 0);
-    assert(DigitalWriteCalls.bot.stp.totalCallCount == 0);
-    // Check the next command
-    assert(nextStep.changeXDir == false);
-    assert(nextStep.changeYDir == false);
-    assert(nextStep.stepPin == TOP_STP_PIN);
-    assert(nextStep.write_value == HIGH);
-
-    drawingInterrupt();
-
-    assert(DigitalWriteCalls.top.dir.totalCallCount == 1);
-    assert(DigitalWriteCalls.bot.dir.totalCallCount == 1);
-    assert(DigitalWriteCalls.top.stp.high == 1);
-    assert(DigitalWriteCalls.bot.stp.totalCallCount == 0);
-
-    drawingInterrupt();
-
-    // Check ended
-    assert(DigitalWriteCalls.enable.high == 1,
-           "disable on end");
-}
-
 void horizontal()
 {
     const int16_t dist = 10;
@@ -503,7 +460,6 @@ int main(int argc, char *argv[])
         struct test tests[] = {
             {writesLowAfterHigh, "writesLowAfterHigh"},
             {emergencyStop, "emergencyStop"},
-            {moveOneThenStop, "moveOneThenStop"},
             {horizontal, "horizontal"},
             {vertical, "vertical"},
             {fortyFive, "fortyFive"},

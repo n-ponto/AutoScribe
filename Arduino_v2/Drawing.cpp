@@ -18,6 +18,8 @@ extern int drawLoopCounter;
 
 extern Servo penServo;
 extern uint8_t penUpAngle, penDownAngle;
+extern uint16_t stepperDelay;
+uint16_t penDelaySteps; // Interrupt steps to pause while pen is moving
 bool penUp;
 
 // Current state of the line drawing algorithm
@@ -39,7 +41,6 @@ struct ns
     uint8_t stepPin, writeVal;   // Pin 'stepPin' to write 'writeVal' to
     bool changeXDir, changeYDir; // Should change x or y motors' direction
     uint8_t newXDir, newYDir;    // New direction for each motor
-    // bool movePen, penUp;
 } nextStep;
 
 unsigned char buffer[BUFSZ];   // Data area for the queue
@@ -82,6 +83,11 @@ void initDrawState(Point *pt)
 // Timer interrupt function
 void drawingInterrupt()
 {
+    if (penDelaySteps > 0)
+    {
+        penDelaySteps--;
+        return;
+    }
     /*************** MOVE HARDWARE ***************/
     // Change stepper directions
     if (nextStep.changeXDir)
@@ -140,11 +146,13 @@ void drawingInterrupt()
        {
             penServo.write(penUpAngle); // Raise the pen
             penUp = true;
+            penDelaySteps = DEFAULT_PEN_DELAY * 1000 / stepperDelay;
        }
        else if (penUp)
        {
             penServo.write(penDownAngle); // Lower the pen
             penUp = false;
+            penDelaySteps = DEFAULT_PEN_DELAY * 1000 / stepperDelay;
        }
        // TODO: add delay to this function to wait for the pen to raise/lower
 

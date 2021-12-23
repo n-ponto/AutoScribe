@@ -11,6 +11,7 @@ _Serial Serial; // Mock of serial object
 _Timer1 Timer1; // Mock of timer object
 Servo penServo;
 uint8_t penUpAngle, penDownAngle;
+uint16_t stepperDelay;
 
 // Tracking state and events
 struct digitalWriteCalls DigitalWriteCalls; // Tracks calls to digital write
@@ -62,6 +63,7 @@ void initMock()
     resetDigitalWriteCalls();
     penUpAngle = DEFAULT_UP;
     penDownAngle = DEFAULT_DOWN;
+    stepperDelay = DEFAULT_STEPPER_DELAY;
 }
 
 /****************** MOCK FUNCTIONS (called by Drawing.cpp) ********************/
