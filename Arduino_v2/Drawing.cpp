@@ -18,6 +18,7 @@ extern int drawLoopCounter;
 
 extern Servo penServo;
 extern uint8_t penUpAngle, penDownAngle;
+bool penUp;
 
 // Current state of the line drawing algorithm
 // between calls to the drawing interrupt
@@ -38,7 +39,7 @@ struct ns
     uint8_t stepPin, writeVal;   // Pin 'stepPin' to write 'writeVal' to
     bool changeXDir, changeYDir; // Should change x or y motors' direction
     uint8_t newXDir, newYDir;    // New direction for each motor
-    bool movePen, penUp;
+    // bool movePen, penUp;
 } nextStep;
 
 unsigned char buffer[BUFSZ];   // Data area for the queue
@@ -82,9 +83,6 @@ void initDrawState(Point *pt)
 void drawingInterrupt()
 {
     /*************** MOVE HARDWARE ***************/
-    // Move pen
-    if (nextStep.movePen)
-        nextStep.penUp ? penServo.write(penUpAngle) : penServo.write(penDownAngle);
     // Change stepper directions
     if (nextStep.changeXDir)
     {
@@ -137,9 +135,18 @@ void drawingInterrupt()
             return;
         }
 
-        // Check flags for moving the pen
-        nextStep.movePen = newPt.x & MOVE_PEN;
-        nextStep.penUp = newPt.x & PEN_UP;
+        // Handle pen
+       if (newPt.x & MOVE_PEN) // If point not connected to previous
+       {
+            penServo.write(penUpAngle); // Raise the pen
+            penUp = true;
+       }
+       else if (penUp)
+       {
+            penServo.write(penDownAngle); // Lower the pen
+            penUp = false;
+       }
+       // TODO: add delay to this function to wait for the pen to raise/lower
 
         newPt.x = CONVERT_ETS(newPt.x); // Convert from eleven to sixteen bit number
 
@@ -191,6 +198,7 @@ void startDrawing()
     digitalWrite(TOP_DIR_PIN, CW);                   // Initialize both steppers
     digitalWrite(BOT_DIR_PIN, CW);
     penServo.write(penUpAngle);               // Start the pen up
+    penUp = true;
     Timer1.attachInterrupt(drawingInterrupt); // Set interrupt function
     Timer1.start();                           // Start the timer interrupt
 }

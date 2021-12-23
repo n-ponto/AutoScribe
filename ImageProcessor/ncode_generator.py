@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 
-from image_to_lines import *
+from hough_lines import *
 
 DEFAULT_SAVE_NAME = "file"
 
@@ -54,13 +54,12 @@ def generate_ncode(lines: list, savename: str):
 
     prev = (0, 0)  # prev point ending
     for start, end in lines:
-        gap = not in_range(start, prev, 2)
+        gap = not in_range(start, prev, 2) # if <2 pixels between line segments
 
         if gap:
-            file.write("UP\n")
+            # Gap between lines -> pen should raise before next point
+            file.write("MOVE\n")
         file.write(f"{start[0]} {start[1]}\n")
-        if gap:
-            file.write("DN\n")
         file.write(f"{end[0]} {end[1]}\n")
 
     print("Saving to path: " + filepath)

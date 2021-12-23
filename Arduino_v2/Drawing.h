@@ -24,7 +24,7 @@ need 11 bits to represent positive numbers,
 // Encodings for commands within the coordiante pairs
 #define EMERGENCY_STOP 0x7FFF  // Signal to stop drawing immediately
 #define MOVE_PEN (1 << 12)     // Signal to change the pen position
-#define PEN_UP (1 << 13)       // Indicates how to change the pen position
+// #define PEN_UP (1 << 13)       // Indicates how to change the pen position
 #define STOP_DRAWING (1 << 14) // Signal to stop drawing when this point is reached
 #define FLAG_MASK (0b1111 << 12)
 

@@ -154,7 +154,7 @@ if __name__ == '__main__':
 
     # Check correct arguments
     if (len(sys.argv) != 2):
-        warning('Usage: python image_to_lines.py path\\to\\image.jpg')
+        warning('Usage: python hough_lines.py path\\to\\image.jpg')
         exit()
 
     # Open the file

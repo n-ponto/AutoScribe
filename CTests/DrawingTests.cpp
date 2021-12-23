@@ -343,8 +343,8 @@ void vizN()
 {
     const int numpts = 5;
     Point pts[] = {
-        {100, 100},
-        {100 | (MOVE_PEN), 200},
+        {(MOVE_PEN) | 100, 100},
+        {100, 200},
         {200, 100},
         {200, 200},
         {STOP_DRAWING, 0}};
@@ -365,29 +365,29 @@ void vizNoah()
     const int numpts = 21;
     Point pts[] = {
         // N
-        {100, 100},
-        {100 | (MOVE_PEN), 200}, // put pen down then move
+        {(MOVE_PEN) | 100, 100},
+        {100, 200}, // put pen down then move
         {200, 100},
         {200, 200},
         // O
-        {(MOVE_PEN) | (PEN_UP) | 210, 100},
-        {(MOVE_PEN) | 310, 100},
+        {(MOVE_PEN) | 210, 100},
+        {310, 100},
         {310, 200},
         {210, 200},
         {210, 100},
         // A
-        {(MOVE_PEN) | (PEN_UP) | 320, 100},
-        {(MOVE_PEN) | 370, 200},
+        {(MOVE_PEN) | 320, 100},
+        {370, 200},
         {429, 100}, // bottom right
-        {(MOVE_PEN) | (PEN_UP) | 320, 140},
-        {(MOVE_PEN) | 420, 140},
+        {(MOVE_PEN) | 320, 140},
+        {420, 140},
         // H
-        {(MOVE_PEN) | (PEN_UP) | 430, 200}, // left line
-        {(MOVE_PEN) | 430, 100},
-        {(MOVE_PEN) | (PEN_UP) | 530, 200}, // right line
-        {(MOVE_PEN) | 530, 100},
-        {(MOVE_PEN) | (PEN_UP) | 430, 150}, // horizontal line
-        {(MOVE_PEN) | 530, 150},
+        {(MOVE_PEN) | 430, 200}, // left line
+        {430, 100},
+        {(MOVE_PEN) | 530, 200}, // right line
+        {530, 100},
+        {(MOVE_PEN) | 430, 150}, // horizontal line
+        {530, 150},
         {STOP_DRAWING, 0}};
     std::queue<Point> q;
     serialQueue = &q;
@@ -419,23 +419,15 @@ void vizFile(char *filePath)
     std::string line;
     std::queue<Point> q;
     serialQueue = &q;
-    bool movePen, penUp;
-    movePen = false;
-    penUp = false;
+
     unsigned long estimatedSteps = 0;
     uint16_t px, py;
     px = py = 0;
     while (std::getline(file, line))
     {
-        if (line.compare("UP") == 0)
-        {
+        bool movePen = false;
+        if (line.compare("MOVE") == 0)
             movePen = true;
-            penUp = true;
-        }
-        else if (line.compare("DN") == 0)
-        {
-            movePen = true;
-        }
         else
         {
             int pos = line.find(" ");
@@ -448,14 +440,7 @@ void vizFile(char *filePath)
             // Encode the x value
             x &= ~FLAG_MASK; // remove flag bits
             if (movePen)
-            {
                 x |= MOVE_PEN;
-                if (penUp)
-                {
-                    x |= PEN_UP;
-                }
-                movePen = penUp = false;
-            }
 
             // std::cout << "X: " << x << " Y: " << y << std::endl;
             Point newPt = {x, y};
@@ -465,8 +450,8 @@ void vizFile(char *filePath)
     file.close();
     q.push({STOP_DRAWING, 0});
 
-    std::cout << "Done generating queue of size " << q.size() << "\n";
-    std::cout << "Estimated steps " << estimatedSteps << std::endl;
+    std::cout << "\t> Done generating queue of size " << q.size() << "\n";
+    std::cout << "\t> Estimated steps " << estimatedSteps << std::endl;
 
     drawLoopCounter = q.size();
     drawing();
@@ -475,13 +460,13 @@ void vizFile(char *filePath)
     std::cout << "Running drawing interrupt\n";
     while (continueDrawing)
         drawingInterrupt();
-    
+
     std::string savePath = std::string(filePath);
     int len = savePath.length();
-    savePath = savePath.substr(len-5, len).append(".bmp");
+    savePath = savePath.substr(len - 5, len).append(".bmp");
 
     saveCanvas(savePath.c_str());
-    std::cout << "Done creating " << savePath << std::endl;
+    std::cout << "DONE CREATING VIZUALIZTION IMAGE\n\t> " << savePath << std::endl;
 }
 
 int runVizualization(char *arg)
@@ -505,7 +490,7 @@ int runVizualization(char *arg)
             return 0;
         }
 
-    std::cout << "Couldn't find viz function for \"" << argstr << "\"\n";
+    std::cout << "\t> no viz function \"" << argstr << "\"\n\t> looking for ncode file...\n";
     return -1;
 }
 
