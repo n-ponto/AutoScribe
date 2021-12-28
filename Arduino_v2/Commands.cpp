@@ -6,6 +6,7 @@ All commands should be able to run in a deterministic amount of computations. Th
 should be simple and have no loops or nested functions.
 */
 
+#include <Arduino.h>
 #include <TimerOne.h>
 
 #include "RuntimeModes.h"
@@ -61,6 +62,6 @@ void setStepperDelay()
     Serial.readBytes((char *)&stepperDelay, 2);
     Timer1.setPeriod(stepperDelay);
     Serial.print("Stepper delay reset to ");
-    Serial.print(delay);
+    Serial.print((long)delay);
     Serial.println("us");
 }

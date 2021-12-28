@@ -5,6 +5,7 @@ Contains all code specific to the Manual Control runtime mode.
 #include <Servo.h>
 #include "RuntimeModes.h"
 #include "Hardware.h"
+#include "Display.h"
 
 // Possible bytes passed from serial
 #define STOP 0
@@ -22,30 +23,34 @@ Contains all code specific to the Manual Control runtime mode.
 extern Servo penServo;
 extern uint8_t penUpAngle, penDownAngle;
 
-bool movePen, penUp;
-bool stepx, stepy;
-char writeVal; // Only set by interrupt
+struct
+{
+    bool movePen, penUp;
+    bool stepx, stepy;
+    char writeVal; // Only set by interrupt
+} mcState;
 
 void manualControlInterrupt()
 {
     // Move steppers
-    if (stepx)
-        digitalWrite(TOP_STP_PIN, writeVal);
-    if (stepy)
-        digitalWrite(BOT_STP_PIN, writeVal);
-    writeVal = !writeVal;
+    if (mcState.stepx)
+        digitalWrite(TOP_STP_PIN, mcState.writeVal);
+    if (mcState.stepy)
+        digitalWrite(BOT_STP_PIN, mcState.writeVal);
+    mcState.writeVal = !mcState.writeVal;
 }
 
 void startManualControl()
 {
-    movePen = false;
-    penUp = true;
-    stepx = stepy = false;
-    writeVal = HIGH;
+    mcState.movePen = false;
+    mcState.penUp = true;
+    mcState.stepx = mcState.stepy = false;
+    mcState.writeVal = HIGH;
     Serial.println("Starting manual control mode.");
     digitalWrite(ENABLE_PIN, ENABLE_STEPPERS); // Enable steppers
     Timer1.attachInterrupt(manualControlInterrupt);
     Timer1.start();
+    displayManualControl();
 }
 
 void endManualControl()
@@ -76,7 +81,7 @@ void manualControl()
         {
         }
 
-        Serial.readBytes((char*)&key, 1);
+        Serial.readBytes((char *)&key, 1);
         if (key == STOP)
             break;
 
@@ -90,31 +95,31 @@ void manualControl()
             break;
         case (UP_P):
             digitalWrite(BOT_DIR_PIN, CW);
-            stepy = true;
+            mcState.stepy = true;
             break;
         case (UP_R):
-            stepy = false;
+            mcState.stepy = false;
             break;
         case (DN_P):
             digitalWrite(BOT_DIR_PIN, CCW);
-            stepy = true;
+            mcState.stepy = true;
             break;
         case (DN_R):
-            stepy = false;
+            mcState.stepy = false;
             break;
         case (LT_P):
             digitalWrite(TOP_DIR_PIN, CCW);
-            stepx = true;
+            mcState.stepx = true;
             break;
         case (LT_R):
-            stepx = false;
+            mcState.stepx = false;
             break;
         case (RT_P):
             digitalWrite(TOP_DIR_PIN, CW);
-            stepx = true;
+            mcState.stepx = true;
             break;
         case (RT_R):
-            stepx = false;
+            mcState.stepx = false;
             break;
         }
     }
