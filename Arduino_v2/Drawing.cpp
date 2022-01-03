@@ -3,7 +3,8 @@ Contains all code specific to the Drawing runtime mode.
 */
 
 #ifndef TESTING
-#include <TimerOne.h>
+#include <Arduino.h>
+#include <TimerTwo.h>
 #include <Servo.h>
 #include "RuntimeModes.h"
 #else
@@ -146,13 +147,13 @@ void drawingInterrupt()
        {
             penServo.write(penUpAngle); // Raise the pen
             penUp = true;
-            penDelaySteps = DEFAULT_PEN_DELAY * 1000 / stepperDelay;
+            penDelaySteps = DEFAULT_PEN_DELAY / (stepperDelay / 1000);
        }
        else if (penUp)
        {
             penServo.write(penDownAngle); // Lower the pen
             penUp = false;
-            penDelaySteps = DEFAULT_PEN_DELAY * 1000 / stepperDelay;
+            penDelaySteps = DEFAULT_PEN_DELAY / (stepperDelay / 1000);
        }
        // TODO: add delay to this function to wait for the pen to raise/lower
 
@@ -207,15 +208,15 @@ void startDrawing()
     digitalWrite(BOT_DIR_PIN, CW);
     penServo.write(penUpAngle);               // Start the pen up
     penUp = true;
-    Timer1.attachInterrupt(drawingInterrupt); // Set interrupt function
-    Timer1.start();                           // Start the timer interrupt
+    Timer2.attachInterrupt(drawingInterrupt); // Set interrupt function
+    Timer2.start();                           // Start the timer interrupt
 }
 
 // Clean up when drawing mode ends
 void endDrawing()
 {
-    Timer1.stop();                              // Stop the timer interrupt
-    Timer1.detachInterrupt();                   // Remove the interrupt function
+    Timer2.stop();                              // Stop the timer interrupt
+    Timer2.detachInterrupt();                   // Remove the interrupt function
     digitalWrite(ENABLE_PIN, DISABLE_STEPPERS); // Disable stepper motors
     setRuntimeMode(acceptingCommands);          // Return to Accepting Commands
     Serial.println("Ending drawing mode.");

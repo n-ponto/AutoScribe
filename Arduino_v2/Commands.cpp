@@ -7,7 +7,7 @@ should be simple and have no loops or nested functions.
 */
 
 #include <Arduino.h>
-#include <TimerOne.h>
+#include <TimerTwo.h>
 
 #include "RuntimeModes.h"
 
@@ -60,7 +60,7 @@ void setStepperDelay()
     Serial.println("Waiting for stepper delay...");
     while(Serial.available() < 2) {}
     Serial.readBytes((char *)&stepperDelay, 2);
-    Timer1.setPeriod(stepperDelay);
+    Timer2.setPeriod(stepperDelay);
     Serial.print("Stepper delay reset to ");
     Serial.print((long)delay);
     Serial.println("us");

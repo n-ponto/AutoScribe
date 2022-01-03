@@ -1,5 +1,6 @@
 import os
 import sys
+from cv2 import VariationalRefinement
 import numpy as np
 
 from hough_lines import *
@@ -21,7 +22,7 @@ def convert_origin_bottom(lines: list, height: int) -> list:
     '''
     print(
         f"Converting coordinates for image of height={height}px")
-    
+
     print("Before:")
     print(lines)
     output = []
@@ -32,7 +33,7 @@ def convert_origin_bottom(lines: list, height: int) -> list:
         y1 = height - y1
         y2 = height - y2
 
-        output.append( ((x1, y1), (x2, y2)) )
+        output.append(((x1, y1), (x2, y2)))
     print("After:")
     print(output)
     return output
@@ -54,7 +55,8 @@ def generate_ncode(lines: list, savename: str):
 
     prev = (0, 0)  # prev point ending
     for start, end in lines:
-        gap = not in_range(start, prev, 2) # if <2 pixels between line segments
+        # if <2 pixels between line segments
+        gap = not in_range(start, prev, 2)
 
         if gap:
             # Gap between lines -> pen should raise before next point
@@ -63,8 +65,6 @@ def generate_ncode(lines: list, savename: str):
         file.write(f"{end[0]} {end[1]}\n")
 
     print("Saving to path: " + filepath)
-
-    file.close()
 
 
 if __name__ == '__main__':

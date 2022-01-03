@@ -1,7 +1,7 @@
 /*
 Contains all code specific to the Manual Control runtime mode.
 */
-#include <TimerOne.h>
+#include <TimerTwo.h>
 #include <Servo.h>
 #include "RuntimeModes.h"
 #include "Hardware.h"
@@ -23,20 +23,30 @@ Contains all code specific to the Manual Control runtime mode.
 extern Servo penServo;
 extern uint8_t penUpAngle, penDownAngle;
 
-struct
+volatile struct
 {
     bool movePen, penUp;
     bool stepx, stepy;
     char writeVal; // Only set by interrupt
+    int16_t x, y;
+    int8_t xchng, ychng; // +/- 1 based on how to change the coordinates each step
 } mcState;
 
 void manualControlInterrupt()
 {
     // Move steppers
     if (mcState.stepx)
+    {
         digitalWrite(TOP_STP_PIN, mcState.writeVal);
+        if (mcState.writeVal)
+            mcState.x += mcState.xchng;
+    }
     if (mcState.stepy)
+    {
         digitalWrite(BOT_STP_PIN, mcState.writeVal);
+        if (mcState.writeVal)
+            mcState.y += mcState.ychng;
+    }
     mcState.writeVal = !mcState.writeVal;
 }
 
@@ -46,17 +56,18 @@ void startManualControl()
     mcState.penUp = true;
     mcState.stepx = mcState.stepy = false;
     mcState.writeVal = HIGH;
+    mcState.x = mcState.y = 0;
     Serial.println("Starting manual control mode.");
     digitalWrite(ENABLE_PIN, ENABLE_STEPPERS); // Enable steppers
-    Timer1.attachInterrupt(manualControlInterrupt);
-    Timer1.start();
+    Timer2.attachInterrupt(manualControlInterrupt);
+    Timer2.start();
     displayManualControl();
 }
 
 void endManualControl()
 {
-    Timer1.stop();                              // Stop the timer
-    Timer1.detachInterrupt();                   // Remove the interrupt
+    Timer2.stop();                              // Stop the timer
+    Timer2.detachInterrupt();                   // Remove the interrupt
     digitalWrite(ENABLE_PIN, DISABLE_STEPPERS); // Disable steppers
     setRuntimeMode(acceptingCommands);          // Return to Accepting Commands
     Serial.println("Manual control mode ended.");
@@ -96,6 +107,7 @@ void manualControl()
         case (UP_P):
             digitalWrite(BOT_DIR_PIN, CW);
             mcState.stepy = true;
+            mcState.ychng = +1;
             break;
         case (UP_R):
             mcState.stepy = false;
@@ -103,6 +115,7 @@ void manualControl()
         case (DN_P):
             digitalWrite(BOT_DIR_PIN, CCW);
             mcState.stepy = true;
+            mcState.ychng = -1;
             break;
         case (DN_R):
             mcState.stepy = false;
@@ -110,6 +123,7 @@ void manualControl()
         case (LT_P):
             digitalWrite(TOP_DIR_PIN, CCW);
             mcState.stepx = true;
+            mcState.xchng = -1;
             break;
         case (LT_R):
             mcState.stepx = false;
@@ -117,11 +131,13 @@ void manualControl()
         case (RT_P):
             digitalWrite(TOP_DIR_PIN, CW);
             mcState.stepx = true;
+            mcState.xchng = +1;
             break;
         case (RT_R):
             mcState.stepx = false;
             break;
         }
+        updateCoordinateDisplay(mcState.x, mcState.y);
     }
     endManualControl();
 }

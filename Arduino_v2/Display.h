@@ -9,6 +9,7 @@ void displayInit();
 
 void displayManualControl();
 
-void updateCoordinateDisplay(uint16_t x, uint16_t y);
+void updateCoordinateDisplay(int16_t x, int16_t y);
+
 
 #endif // DISPLAY_H_

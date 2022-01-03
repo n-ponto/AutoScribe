@@ -9,19 +9,13 @@ Default font is 8 pixels high by 5 pixels wide
 */
 
 #include <Nokia_LCD.h>
+#include "Hardware.h"
 
-#define DSP_PIN_CLK 11 // Clock
-#define DSP_PIN_DIN 11 // Data input pin
-#define DSP_PIN_DC 11  // Data or command pin
-#define DSP_PIN_CE 11  // Chip select pin
-#define DSP_PIN_RST 11 // Reset pin
-#define DSP_PIN_BL 11  // Backlight pin
-
-#define MARGIN 3
 #define FONT_HEIGHT 8
-#define FONT_WIDTH 5
+#define FONT_WIDTH (5 + 1)
 #define SCREEN_HEIGHT 48
 #define SCREEN_WIDTH 84
+#define BOTTOM_ROW 4
 
 Nokia_LCD lcd(DSP_PIN_CLK, DSP_PIN_DIN, DSP_PIN_DC, DSP_PIN_CE, DSP_PIN_RST, DSP_PIN_BL);
 
@@ -62,29 +56,27 @@ const unsigned char start_screen[504] PROGMEM= {
 
 void displayHeader(const char *mode)
 {
-    lcd.clear(true);
-    lcd.setCursor(MARGIN, MARGIN);
+    lcd.clear();
+    if (!lcd.setCursor(0, 0)) // Top left
+        Serial.println("displayHeader out of bounds error");
     lcd.print(mode);
 }
 
 void initCoordinateDisplay()
 {
-    const char coordText[] = "X 0000   Y 0000";
-    uint8_t xStart, yStart;
-    xStart = SCREEN_WIDTH - MARGIN - FONT_WIDTH * sizeof(coordText);
-    yStart = SCREEN_HEIGHT - MARGIN - FONT_HEIGHT;
-    lcd.setCursor(xStart, yStart);
+    const char coordText[] = "X 0000  Y 0000";
+    lcd.setCursor(0, BOTTOM_ROW);
     lcd.print(coordText);
 }
 
 void clearCoord(uint16_t coord)
 {
     const char space = ' ';
-    if (coord >= 10)
+    if (coord < 1000)
         lcd.print(space);
-    if (coord >= 100)
+    if (coord < 100)
         lcd.print(space);
-    if (coord >= 1000)
+    if (coord < 10)
         lcd.print(space);
 }
 
@@ -92,33 +84,33 @@ void clearCoord(uint16_t coord)
 
 void displayInit()
 {
+    // Set up display pins
+    pinMode(DSP_PIN_CLK, OUTPUT);
+    pinMode(DSP_PIN_DIN, OUTPUT);
+    pinMode(DSP_PIN_DC, OUTPUT);
+    pinMode(DSP_PIN_CE, OUTPUT);
+    pinMode(DSP_PIN_RST, OUTPUT);
+    pinMode(DSP_PIN_BL, OUTPUT);
+    // Set up lcd
     lcd.begin();            // Initialize the screen
     lcd.setContrast(60);    // Should be 40-60
-    lcd.clear(true);        // Fill screen with black pixels
-    lcd.setBacklight(true); // Turn on the backlight
-    lcd.setCursor(0, 0);
+    lcd.clear();        // Fill screen with black pixels
     lcd.draw(start_screen, sizeof(start_screen), true);
-    delay(3000); // Wait 3 seconds
-    lcd.setBacklight(false); // Turn off backlight
-    lcd.clear(true);
 }
 
 void displayManualControl()
 {
-    displayHeader("Manual Control");
+    displayHeader("MANUAL CONTROL");
     initCoordinateDisplay();
 }
 
-void updateCoordinateDisplay(uint16_t x, uint16_t y)
+void updateCoordinateDisplay(int16_t x, int16_t y)
 {
-    uint8_t xStartX, yStartX, startY;
-    xStartX = SCREEN_WIDTH - MARGIN - FONT_WIDTH * 13;
-    yStartX = SCREEN_WIDTH - MARGIN - FONT_WIDTH * 4;
-    startY = SCREEN_HEIGHT - MARGIN - FONT_HEIGHT;
-    lcd.setCursor(xStartX, startY);
+    // Coordinates are left aligned
+    lcd.setCursor(FONT_WIDTH * 2, BOTTOM_ROW);
     lcd.print(x);
     clearCoord(x);
-    lcd.setCursor(yStartX, startY);
+    lcd.setCursor(FONT_WIDTH * 10, BOTTOM_ROW);
     lcd.print(y);
     clearCoord(y);
 }

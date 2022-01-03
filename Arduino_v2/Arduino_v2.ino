@@ -6,7 +6,7 @@ Contains:
 - list of functions for the runtime modes
 */
 
-#include <TimerOne.h>
+#include <TimerTwo.h>
 #include <Servo.h>
 #include "Hardware.h"
 #include "RuntimeModes.h"
@@ -30,7 +30,7 @@ void hardwareInit()
     digitalWrite(ENABLE_PIN, DISABLE_STEPPERS);
     // initialize the pen servo pin
     penUpAngle = DEFAULT_UP;
-    penDownAngle = DEFAULT_UP;
+    penDownAngle = DEFAULT_DOWN;
     penServo.attach(SERVO_PIN);
     penServo.write(penUpAngle);
 }
@@ -39,7 +39,7 @@ void setup()
 {
     Serial.begin(9600);
     stepperDelay = DEFAULT_STEPPER_DELAY;
-    Timer1.initialize(stepperDelay);
+    Timer2.init(stepperDelay, NULL);
     runtime_mode = acceptingCommands;
     hardwareInit();
     displayInit();

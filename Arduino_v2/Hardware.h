@@ -12,7 +12,15 @@ Constants for hardware pins, constant values, and defaults
 #define ENABLE_PIN 8  // Pin to enable both motors
 
 // Pen servo pin
-#define SERVO_PIN 11 // Pin for the servo motor holding the pen
+#define SERVO_PIN 10 // Pin for the servo motor holding the pen
+
+// Display Pins
+#define DSP_PIN_CLK 13 // Clock
+#define DSP_PIN_DIN 12 // Data input pin
+#define DSP_PIN_DC 11  // Data or command pin
+#define DSP_PIN_CE 4  // Chip select pin
+#define DSP_PIN_RST 9 // Reset pin
+#define DSP_PIN_BL 7  // Backlight pin
 
 // Spin directions
 #define CW LOW   // Direction value to turn clockwise
@@ -24,7 +32,7 @@ Constants for hardware pins, constant values, and defaults
 // Defaults
 #define DEFAULT_UP 50              // Angle for when the pen is up off the paper
 #define DEFAULT_DOWN 70            // Angle when pen is down on the paper
-#define DEFAULT_STEPPER_DELAY 1600 // Microsecond delay between stepper pulses
+#define DEFAULT_STEPPER_DELAY 2000 // Microsecond delay between stepper pulses
 #define DEFAULT_PEN_DELAY 50       // Millisecond delay to pause while the pen goes up/down
 
 #endif //HARDWARE_H_
