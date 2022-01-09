@@ -380,9 +380,9 @@ void vizFile(char *filePath)
     unsigned long estimatedSteps = 0;
     uint16_t px, py;
     px = py = 0;
+    bool movePen = false;
     while (std::getline(file, line))
     {
-        bool movePen = false;
         if (line.compare("MOVE") == 0)
             movePen = true;
         else
@@ -402,6 +402,7 @@ void vizFile(char *filePath)
             // std::cout << "X: " << x << " Y: " << y << std::endl;
             Point newPt = {x, y};
             q.push(newPt);
+            movePen = false;
         }
     }
     file.close();
@@ -414,10 +415,10 @@ void vizFile(char *filePath)
     drawing();
     assert(q.size() == 0);
 
-    std::cout << "Running drawing interrupt\n";
+    std::cout << "Running drawing interrupt...\n";
     while (continueDrawing)
         drawingInterrupt();
-
+    std::cout << "done drawing!\n";
     std::string savePath = std::string(filePath);
     int len = savePath.length();
     savePath = savePath.substr(len - 5, len).append(".bmp");

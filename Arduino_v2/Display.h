@@ -8,6 +8,7 @@
 void displayInit();
 
 void displayManualControl();
+void displayDrawing();
 
 void updateCoordinateDisplay(int16_t x, int16_t y);
 

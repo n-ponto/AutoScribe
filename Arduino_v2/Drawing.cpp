@@ -7,6 +7,7 @@ Contains all code specific to the Drawing runtime mode.
 #include <TimerTwo.h>
 #include <Servo.h>
 #include "RuntimeModes.h"
+#include "Display.h"
 #else
 extern int drawLoopCounter;
 #include "../CTests/DrawingMocks.h"
@@ -138,29 +139,32 @@ void drawingInterrupt()
         // Check for stop signal
         if (newPt.x & STOP_DRAWING)
         {
+#ifdef VERBOSE_DEBUG
+            printf("Dequeued stop drawing point\n");
+#endif
             continueDrawing = false;
             return;
         }
 
         // Handle pen
-       if (newPt.x & MOVE_PEN) // If point not connected to previous
-       {
+        if (newPt.x & MOVE_PEN) // If point not connected to previous
+        {
             penServo.write(penUpAngle); // Raise the pen
             penUp = true;
             penDelaySteps = DEFAULT_PEN_DELAY / (stepperDelay / 1000);
-       }
-       else if (penUp)
-       {
+        }
+        else if (penUp)
+        {
             penServo.write(penDownAngle); // Lower the pen
             penUp = false;
             penDelaySteps = DEFAULT_PEN_DELAY / (stepperDelay / 1000);
-       }
-       // TODO: add delay to this function to wait for the pen to raise/lower
+        }
+        // TODO: add delay to this function to wait for the pen to raise/lower
 
         newPt.x = CONVERT_ETS(newPt.x); // Convert from eleven to sixteen bit number
 
 #ifdef VERBOSE_DEBUG
-        printf("Dequeue point: (%d, %d) movePen=%d penUp=%d\n", newPt.x, newPt.y, nextStep.movePen, nextStep.penUp);
+        printf("Dequeue point: (%hd, %hd)\n", newPt.x, newPt.y);
 #endif
 
         // Compare x's, if different sign then change stepper direction for new point
@@ -206,10 +210,11 @@ void startDrawing()
     digitalWrite(ENABLE_PIN, ENABLE_STEPPERS);       // Enable stepper motors
     digitalWrite(TOP_DIR_PIN, CW);                   // Initialize both steppers
     digitalWrite(BOT_DIR_PIN, CW);
-    penServo.write(penUpAngle);               // Start the pen up
+    penServo.write(penUpAngle); // Start the pen up
     penUp = true;
     Timer2.attachInterrupt(drawingInterrupt); // Set interrupt function
     Timer2.start();                           // Start the timer interrupt
+    displayDrawing();                         // Show the drawing screen
 }
 
 // Clean up when drawing mode ends
@@ -218,6 +223,7 @@ void endDrawing()
     Timer2.stop();                              // Stop the timer interrupt
     Timer2.detachInterrupt();                   // Remove the interrupt function
     digitalWrite(ENABLE_PIN, DISABLE_STEPPERS); // Disable stepper motors
+    penServo.write(penUpAngle);                 // End with the pen up
     setRuntimeMode(acceptingCommands);          // Return to Accepting Commands
     Serial.println("Ending drawing mode.");
 }
@@ -254,13 +260,17 @@ void drawingLoop()
         flags = read.x & FLAG_MASK;
         read.x = CONVERT_ETS(read.x);
 
+#ifdef VERBOSE_DEBUG
+        printf("Received point: (0x%04hX, 0x%04hX) (%hi, %hi)\tFlags: 0x%04hX\n", read.x, read.y, read.x, read.y, flags);
+#endif
+
         // Queue the change from previous coordinate
         change.x = (read.x - previous.x) & ~FLAG_MASK; // Convert back into eleven bit encoding
         change.y = read.y - previous.y;
         change.x |= flags; // add the flags back to the change
         enqueue(&queue, &change);
 #ifdef VERBOSE_DEBUG
-        printf("Enqueue point: (%d, %d) movePen=%d penUp=%d\n", CONVERT_ETS(change.x), change.y, change.x & MOVE_PEN, change.x & PEN_UP);
+        printf("\tenqueue point: (0x%04hX, 0x%04hX) (%hi, %hi) %s %s\n", CONVERT_ETS(change.x), change.y, CONVERT_ETS(change.x), change.y, change.x & MOVE_PEN ? "\tMOVE" : "", change.x & STOP_DRAWING ? "\tSTOP" : "");
 #endif
 
         previous = read; // Update the previous position

@@ -104,6 +104,11 @@ void displayManualControl()
     initCoordinateDisplay();
 }
 
+void displayDrawing()
+{
+    displayHeader("DRAWING");
+}
+
 void updateCoordinateDisplay(int16_t x, int16_t y)
 {
     // Coordinates are left aligned

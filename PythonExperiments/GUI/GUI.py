@@ -1,33 +1,35 @@
-import tkinter as tk
-from Settings import Settings
-from SerialPort import SerialPort
-from ManualStepFrame import ManualStepFrame
-from DrawingFrame import DrawingFrame
+import sys, os
 
-# Functions to run during closing
+from serial.serialwin32 import Serial
+sys.path.append(os.path.dirname(__file__) + "/..")
+from Tools.SerialPort import SerialPort
+# Import frames
+from Frames.ManualControlFrame import ManualControlFrame
+from Frames.TunePenFrame import TunePenFrame
+from Frames.DrawingFrame import DrawingFrame
+# Import tkinter libraries
+import tkinter as tk
+from tkinter import ttk
 
 root = tk.Tk()
-
-exit_functions: list = [root.quit]
-
-def exitScript(): 
-    for func in exit_functions:
-        func()
-
-root.protocol("WM_DELETE_WINDOW", exitScript)
+root.geometry("500x500")
+root.resizable(0, 0) # Don't resize x or y
+root.title("AutoScribe GUI")
+tabControl = ttk.Notebook(root)
 
 serial = SerialPort()
-settingsMenu:tk.Frame = Settings(root, serial)
-settingsMenu.grid(row=0, column=0)
 
-manualStepFrame = ManualStepFrame(root, serial, exit_functions)
-manualStepFrame.grid(row=0, column=1)
-
-drawingFrame = DrawingFrame(root, serial)
-drawingFrame.grid(row=0, column=2)
+tab1 = TunePenFrame(tabControl, serial)
+tab2 = ManualControlFrame(tabControl, serial)
+tab3 = DrawingFrame(tabControl, serial)
+  
+tabControl.add(tab1, text ='Tune Pen')
+tabControl.add(tab2, text ='Manual Control')
+tabControl.add(tab3, text ='Drawing')
+tabControl.pack(expand = 1, fill ="both")
 
 serial.awaitResponse()
-root.mainloop()
+root.mainloop()  
 
 
 

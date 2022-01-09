@@ -15,6 +15,7 @@
 
 void setRuntimeMode(void (*fn)());
 void acceptingCommands();
+void displayDrawing();
 void delay(int);
 
 class Servo
@@ -45,7 +46,7 @@ public:
     void stop();
 };
 
-extern class _Timer1 Timer1;
+extern class _Timer1 Timer2;
 
 // Struct to keep track of calls to digital write
 struct pin

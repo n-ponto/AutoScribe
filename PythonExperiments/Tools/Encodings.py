@@ -3,6 +3,8 @@ Definitions for encoding messages when sending over the serial port
 Ensure that these encodings match with what the Ardino code expects to receive. 
 '''
 
+NCODE_MOVE = 'MOVE'
+
 # Defined in Commands.h
 class Commands:
     SET_PEN_RANGE =         0
@@ -17,8 +19,8 @@ class Commands:
 class Drawing:
     EMERGENCY_STOP = 0x7FFF  
     MOVE_PEN =       (1 << 12)  # Should move the pen (down if PEN_UP == 0)
-    PEN_UP =         (1 << 13)  # Move the pen up or down
     STOP_DRAWING =   (1 << 14)
+    FLAG_MASK = (0b1111 << 12)
 
 # Special encodings for the manual control runtime mode
 class MCKeys:

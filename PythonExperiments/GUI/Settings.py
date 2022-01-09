@@ -1,12 +1,14 @@
 import tkinter as tk
-from Config import Default, Commands
-from SerialPort import SerialPort
 from time import sleep
+import sys, os
+sys.path.append(os.path.dirname(__file__) + "/..")
+from Tools.Encodings import *
+from Tools.SerialPort import SerialPort
 
 # Globals used to keep track of the last value sent to the arduino
-speed = Default.Speed
-penUp = Default.UpAngle
-penDown = Default.DownAngle
+speed = 2000
+penUp = 50
+penDown = 70
 
 def Settings(master: tk.Misc, serial: SerialPort) -> tk.Frame:
     frame = tk.Frame(

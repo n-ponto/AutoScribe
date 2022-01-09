@@ -4,8 +4,12 @@ import cv2
 from hough_lines import warning
 
 MOVE_STR = "MOVE"
-CLOSE_PATH = "z" # SVG encoding to close the current path (i.e. return to starting point)
-CURVE = "c"
+CLOSE_PATH = 'z' # SVG encoding to close the current path (i.e. return to starting point)
+RELATIVE_COORDINATES = 'l'
+ABSOLUTE_COORDINATES = 'L'
+RELATIVE_MOVE = 'm'
+ABSOLUTE_MOVE = 'M'
+CURVE = 'c'
 
 def get_svg_doc(filepath: str) -> md.Document:
     '''
@@ -39,7 +43,8 @@ def parse_svg(filepath: str) -> list:
 
     output = []  # List for storing outpoint coordiantes
 
-    print("\nSVG PATHS:")
+    print(f"Found {len(coordinate_strs)} different paths in the file")
+    prev_coord = (0, 0)
     for path_string in coordinate_strs:
         print(path_string)
         # Indicate this is a new path and the pen should lift and move
@@ -49,32 +54,65 @@ def parse_svg(filepath: str) -> list:
         
         # Each part should be a coordinate pair
         failed = False # Indicates failure during parsing path
-        path_list = [MOVE_STR]  # List to store the current path
-        for i in range(1, len(parts)):
-            part = parts[i]
-            coords: list = part.split(",")\
+        relative = False # Coordinates are relative or absolute
+        path_list = []  # List to store the current path
+        i = 0
 
-            # Check for coordinate pair
-            if (len(coords) != 2):
-                if (len(coords) == 1 and part.lower() == CLOSE_PATH):
+        # Handle relative move as first element
+        if (parts[0] == RELATIVE_MOVE):
+            # First element absolute, rest relative
+            coords: list = parts[1].split(",")
+            assert(len(coords) == 2)
+            x = round(float(coords[0]))
+            y = round(float(coords[1]))
+            prev_coord = (x, y)
+            path_list.append(MOVE_STR)
+            path_list.append(prev_coord)
+            relative = True
+            i = 2
+
+        while i < len(parts):
+            part = parts[i]
+            coords: list = part.split(",")
+            if len(coords) == 1:
+                if (part.lower() == CLOSE_PATH):
                     path_list.append(path_list[1]) # Close path -> add the first element again
-                    continue
+                elif part == RELATIVE_MOVE:
+                    path_list.append(MOVE_STR)
+                    relative = True
+                elif part == ABSOLUTE_MOVE:
+                    path_list.append(MOVE_STR)
+                    relative = False
+                elif part == RELATIVE_COORDINATES:
+                    relative = True
+                elif part == ABSOLUTE_COORDINATES:
+                    relative = False
                 elif (part.lower() == CURVE):
-                    # TODO: if there's a special character at part[2] (like 'c') then handle that
-                    print("\t> Not appending curve to output")
+                    warning("SVG file includes curves.")
                     failed = True
                     break
                 else:
-                    warning(f"Expected two coordinates in part \"{part}\" found {len(coords)}, not appending path")
+                    warning(f"Can't handle part \"{part}\"")
                     failed = True
                     break
-
-            # Found pair of elements (coordinate pair)
-            x = round(float(coords[0]))
-            y = round(float(coords[1]))
-            assert(x > 0)
-            assert(y > 0)
-            path_list.append((x, y))  # Append the coordinate pair to the list
+            elif len(coords) == 2:
+                # Found pair of elements (coordinate pair)
+                x = round(float(coords[0]))
+                y = round(float(coords[1]))
+                # If relative then add previous coordinate
+                if relative:
+                    x+=prev_coord[0]
+                    y+=prev_coord[1]
+                assert(x > 0 and y > 0), f"({x}, {y}) should be nonzero"
+                prev_coord = (x, y)
+                path_list.append(prev_coord)  # Append the coordinate pair to the list
+                relativeMove = False
+            else:
+                warning(f"Can't parse part of path \"{part}\"")
+                failed = True
+                break
+            i += 1
+        # End for loop
         if not failed:
             # print("Appending:")
             # print(path_list)
@@ -106,12 +144,13 @@ def svg_to_ncode(svg_path: str, save_path: str):
         else:
             warning(f"Unexpected type while translating to ncode: {type(element)}")
     
-    print("SAVING TO PATH: " + filepath)
+    print("DONE TRANSLATING: " + svg_path)
+    print("INTO NCODE: " + filepath)
     file.close()
 
 
 if __name__ == '__main__':
-    '''
+    '''s
     Take a SVG file as an argument and parse out the lines to draw
     '''
 
@@ -131,4 +170,12 @@ if __name__ == '__main__':
 
     # lines: list = parse_svg(svg_path)
     svg_to_ncode(svg_path, save_path)
+
+
+'''
+Refrences
+
+Doc of SVG path commands
+https://www.w3.org/TR/SVG/paths.html
+'''
 

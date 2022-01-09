@@ -3,12 +3,13 @@
 #include <cstring>
 
 #include "DrawingMocks.h"
+#include "TestingUtils.h"
 #include "../Arduino_v2/Drawing.h"
 #include "../Arduino_v2/Hardware.h"
 
 // Object mocks
 _Serial Serial; // Mock of serial object
-_Timer1 Timer1; // Mock of timer object
+_Timer1 Timer2; // Mock of timer object
 Servo penServo;
 uint8_t penUpAngle, penDownAngle;
 uint16_t stepperDelay;
@@ -71,7 +72,7 @@ void initMock()
 // Tracks the state of the pen on a servo write
 void Servo::write(const uint8_t angle)
 {
-    penStateUp = angle < 60;  // Lower angle is higher from paper
+    penStateUp = angle == penUpAngle;  // Lower angle is higher from paper
     if (!penStateUp)
     {
         image[currentPoint.y][currentPoint.x][RED] = 255;
@@ -99,16 +100,19 @@ size_t _Serial::readBytes(char *buffer, size_t length)
 
 void colorPixel()
 {
+    int16_t y = IMAGE_HEIGHT - currentPoint.y;
+    assert(0 <= currentPoint.x && currentPoint.x <= IMAGE_WIDTH);
+    assert(0 <= y && y <= IMAGE_HEIGHT);
     if (penStateUp) // If the pen is up then draw a gray line
     {
-        if (image[currentPoint.y][currentPoint.x][RED] == 255)
+        if (image[y][currentPoint.x][RED] == 255)
             return; // Don't color over pixel
-        image[currentPoint.y][currentPoint.x][BLUE] = 100;
-        image[currentPoint.y][currentPoint.x][GREEN] = 100;
-        image[currentPoint.y][currentPoint.x][RED] = 100;
+        image[y][currentPoint.x][BLUE] = 100;
+        image[y][currentPoint.x][GREEN] = 100;
+        image[y][currentPoint.x][RED] = 100;
     }
     else // If the pen is down then draw a red line
-        image[currentPoint.y][currentPoint.x][RED] = 255;
+        image[y][currentPoint.x][RED] = 255;
 }
 
 // Keeps track of the digital write calls and the
@@ -171,14 +175,19 @@ void _Timer1::stop()
 {
 }
 
-void _Serial::print(const char *)
+void arduinoPrint(const char* str)
 {
-    return;
+    printf("[ARDUINO] %s\n", str);
 }
 
-void _Serial::println(const char *)
+void _Serial::print(const char *str)
 {
-    return;
+    arduinoPrint(str);
+}
+
+void _Serial::println(const char *str)
+{
+    arduinoPrint(str);
 }
 
 void _Serial::print(unsigned long, int)
@@ -200,5 +209,9 @@ void acceptingCommands()
 }
 
 void delay(int)
+{
+}
+
+void displayDrawing()
 {
 }

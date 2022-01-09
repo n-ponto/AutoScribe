@@ -7,22 +7,43 @@ should be simple and have no loops or nested functions.
 */
 
 #include <Arduino.h>
+#include <Servo.h>
 #include <TimerTwo.h>
 
 #include "RuntimeModes.h"
 
+extern Servo penServo;
+extern uint8_t penUpAngle, penDownAngle;
 extern uint16_t stepperDelay;
 
 void setPenRange()
 {
     // Read two bytes, one for the minimum then maximum angle for the pen's
     // movement
+    uint8_t angles[2];
+    while (Serial.available() < sizeof(angles)) {}
+    Serial.readBytes((char *)&angles, sizeof(angles));
+    penUpAngle = angles[0];
+    penDownAngle = angles[1];
     return;
 }
 
 void changePenAngle()
 {
     // Read one byte and change the pen angle to that value
+    // Will continue until it receives a value greater than 180
+    Serial.println("Changing angle of the pen.");
+    uint8_t angle = 0;
+    while (true)
+    {
+        while (Serial.available() < 1) {}
+        Serial.readBytes((char *)&angle, 1);
+        if (angle > 180)
+            break;
+        penServo.write(angle);
+        Serial.print("Angle set to ");
+        Serial.println(angle);
+    }
     return;
 }
 

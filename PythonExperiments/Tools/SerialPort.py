@@ -52,6 +52,9 @@ class SerialPort():
         if prt: print("writing: (", x, ",", y, ")")
         self._port.write(pack("HH", x, y))
 
+    def flushTxBuffer(self):
+        self._port.reset_output_buffer()
+
 if __name__=='__main__':
     sp = SerialPort()
     sp.awaitResponse()
