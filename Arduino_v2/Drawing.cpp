@@ -159,6 +159,9 @@ void drawingInterrupt()
             penUp = false;
             penDelaySteps = DEFAULT_PEN_DELAY / (stepperDelay / 1000);
         }
+#ifdef TESTING
+        penDelaySteps = 0; // Don't bother delaying if we're testing
+#endif
         // TODO: add delay to this function to wait for the pen to raise/lower
 
         newPt.x = CONVERT_ETS(newPt.x); // Convert from eleven to sixteen bit number
@@ -177,7 +180,7 @@ void drawingInterrupt()
         if (DIFF_SIGN(drawState.pt.y, newPt.y))
         {
             nextStep.changeYDir = true;
-            nextStep.newYDir = newPt.y & NEG_BIT ? CCW : CW;
+            nextStep.newYDir = newPt.y & NEG_BIT ? CW : CCW;
         }
         // Initialize the drawing state for the next coordinate
         initDrawState(&newPt);
@@ -209,7 +212,7 @@ void startDrawing()
     drawState = {0, 0, 0, 0, 0};                     // Clear drawing state
     digitalWrite(ENABLE_PIN, ENABLE_STEPPERS);       // Enable stepper motors
     digitalWrite(TOP_DIR_PIN, CW);                   // Initialize both steppers
-    digitalWrite(BOT_DIR_PIN, CW);
+    digitalWrite(BOT_DIR_PIN, CCW);
     penServo.write(penUpAngle); // Start the pen up
     penUp = true;
     Timer2.attachInterrupt(drawingInterrupt); // Set interrupt function

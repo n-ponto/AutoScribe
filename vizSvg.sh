@@ -3,15 +3,15 @@
 image_file=$1
 save_file=testSaveFile.ncode
 
-rm $save_file # Remove the previous save file
+# Remove the previous save file
+rm $save_file
 
 # Define the commands
-parse_svg_command="python ../ImageProcessor/svg_parser.py $image_file $save_file"
-viz_command="./draw $save_file"
+parse_svg_command="python ./ImageProcessor/svg_parser.py $image_file $save_file"
+viz_command="./CTests/draw $save_file"
 
-printf "\nTranslating $image_file into $save_file\n"
-if make draw; then
-
+printf "Translating $image_file into $save_file\n"
+if (cd CTests && make draw); then
     if $parse_svg_command; then
         printf "\nVizualizing $save_file\n"
         if $viz_command; then

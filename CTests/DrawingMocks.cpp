@@ -101,8 +101,8 @@ size_t _Serial::readBytes(char *buffer, size_t length)
 void colorPixel()
 {
     int16_t y = IMAGE_HEIGHT - currentPoint.y;
-    assert(0 <= currentPoint.x && currentPoint.x <= IMAGE_WIDTH);
-    assert(0 <= y && y <= IMAGE_HEIGHT);
+    assert(0 <= currentPoint.x && currentPoint.x <= IMAGE_WIDTH, "x outside bounds");
+    assert(0 <= y && y <= IMAGE_HEIGHT, "y outside bounds");
     if (penStateUp) // If the pen is up then draw a gray line
     {
         if (image[y][currentPoint.x][RED] == 255)
@@ -142,7 +142,7 @@ void digitalWrite(uint8_t pin, uint8_t val)
         p = &DigitalWriteCalls.bot.stp;
         if (val)
         {
-            currentPoint.y += yMovingCW ? 1 : -1;
+            currentPoint.y += yMovingCW ? -1 : +1;
             colorPixel();
         }
         break;
