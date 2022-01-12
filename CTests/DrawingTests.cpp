@@ -1,23 +1,23 @@
 #include <cstdio>
 #include <cstdlib>
-#include <string>
-#include <iostream>
 #include <cstring>
 #include <fstream>
+#include <iostream>
+#include <string>
 
-#include "../Arduino_v2/Hardware.h"
 #include "../Arduino_v2/Drawing.h"
+#include "../Arduino_v2/Hardware.h"
 #include "DrawingMocks.h"
 #include "TestingUtils.h"
 
 // Prototypes for Drawing.cpp functions for testing
 void drawing();
+void drawingLoop();
 void drawingInterrupt();
 
 /****************** STRUCTS FROM DRAWING.CPP ******************/
 
-extern struct ds
-{
+extern struct ds {
     Point pt;
     int16_t i;
     int16_t absx;
@@ -27,8 +27,7 @@ extern struct ds
     int8_t x_chnage, y_change;
 } drawState;
 
-extern struct ns
-{
+extern struct ns {
     uint8_t stepPin, write_value;
     bool changeXDir, changeYDir;
     uint8_t newXDir, newYDir;
@@ -42,72 +41,16 @@ extern std::queue<Point> *serialQueue;
 extern bool continueDrawing;
 int drawLoopCounter;
 
-/****************** INTERRUPT TESTS ******************/
-
-void writesLowAfterHigh()
-{
-    initMock();
-
-    drawState = {0, 0, 0, 0, 0};
-    nextStep.write_value = HIGH;
-    nextStep.changeXDir = false;
-    nextStep.changeYDir = false;
-    nextStep.stepPin = 0xFF; // STEP_BOTH
-
-    drawingInterrupt(); // Call interrupt
-
-    // Should keep the direction the same, write high to both motors
-    assert(DigitalWriteCalls.top.dir.totalCallCount == 0,
-           "same top direction after call");
-    assert(DigitalWriteCalls.bot.dir.totalCallCount == 0,
-           "save bottom direction after call");
-
-    assert(DigitalWriteCalls.top.stp.high == 1,
-           "step top after first call");
-    assert(DigitalWriteCalls.bot.stp.high == 1,
-           "step bottom after first call");
-
-    assert(DigitalWriteCalls.top.stp.low == 0,
-           "no step low after first call");
-    assert(DigitalWriteCalls.bot.stp.low == 0,
-           "no step bottom low after first call");
-
-    // Should set the write value to LOW
-    assert(nextStep.write_value == LOW,
-           "set next call to low");
-
-    drawingInterrupt(); // Call interrupt
-
-    // Direction same, low to both motors
-    assert(DigitalWriteCalls.top.dir.totalCallCount == 0,
-           "same top direction after second call");
-    assert(DigitalWriteCalls.bot.dir.totalCallCount == 0,
-           "save bottom direction after second call");
-
-    assert(DigitalWriteCalls.top.stp.high == 1,
-           "step top after second call");
-    assert(DigitalWriteCalls.bot.stp.high == 1,
-           "step bottom after second call");
-
-    assert(DigitalWriteCalls.top.stp.low == 1,
-           "no step low after second call");
-    assert(DigitalWriteCalls.bot.stp.low == 1,
-           "no step bottom low after second call");
-}
-
 /******************************* DRAWING TESTS ******************************/
 
-void queuePoints(Point *pts, const int count)
-{
+void queuePoints(Point *pts, const int count) {
     initMock();
-    for (int i = 0; i < count; i++)
-    {
+    for (int i = 0; i < count; i++) {
         serialQueue->push(pts[i]);
     }
 }
 
-void emergencyStop()
-{
+void emergencyStop() {
     initMock();
     Point es = {0x7FFF, 0};
     std::queue<Point> q;
@@ -120,8 +63,7 @@ void emergencyStop()
            "disable on end");
 }
 
-void horizontal()
-{
+void horizontal() {
     const int16_t dist = 10;
     Point pts[] = {{dist, 0}, {STOP_DRAWING, 0}};
     std::queue<Point> q;
@@ -147,8 +89,7 @@ void horizontal()
     assert(DigitalWriteCalls.top.stp.low == dist);
 }
 
-void vertical()
-{
+void vertical() {
     const int16_t dist = 17;
     Point pts[] = {{0, dist}, {STOP_DRAWING, 0}};
     std::queue<Point> q;
@@ -174,8 +115,7 @@ void vertical()
     assert(DigitalWriteCalls.bot.stp.low == dist);
 }
 
-void fortyFive()
-{
+void fortyFive() {
     const int16_t dist = 7;
     Point pts[] = {{dist, dist}, {STOP_DRAWING, 0}};
     std::queue<Point> q;
@@ -198,8 +138,7 @@ void fortyFive()
     assert(DigitalWriteCalls.bot.stp.low == dist);
 }
 
-void slopeThird()
-{
+void slopeThird() {
     const int16_t dist = 30;
     Point pts[] = {{dist, dist / 3}, {STOP_DRAWING, 0}};
     std::queue<Point> q;
@@ -209,8 +148,7 @@ void slopeThird()
     drawLoopCounter = 2;
     drawing();
 
-    while (continueDrawing)
-    {
+    while (continueDrawing) {
         drawingInterrupt();
         // Should always be more X axis steps than Y axis
         assert(DigitalWriteCalls.top.stp.high >= DigitalWriteCalls.bot.stp.high,
@@ -230,8 +168,7 @@ void slopeThird()
     assert(DigitalWriteCalls.bot.stp.low == dist / 3);
 }
 
-void slopeSteepThree()
-{
+void slopeSteepThree() {
     const int16_t dist = 30;
     Point pts[] = {{dist / 3, dist}, {STOP_DRAWING, 0}};
     std::queue<Point> q;
@@ -241,8 +178,7 @@ void slopeSteepThree()
     drawLoopCounter = 2;
     drawing();
 
-    while (continueDrawing)
-    {
+    while (continueDrawing) {
         drawingInterrupt();
         // Should always be more Y axis steps than X axis
         assert(DigitalWriteCalls.bot.stp.high >= DigitalWriteCalls.top.stp.high,
@@ -262,12 +198,11 @@ void slopeSteepThree()
     assert(DigitalWriteCalls.top.stp.low == dist / 3);
 }
 
-void triangle()
-{
+void triangle() {
     const int numpts = 5;
     Point pts[] = {
         {21, 7},
-        {10 | (MOVE_PEN), 29}, // pen down
+        {10 | (MOVE_PEN), 29},  // pen down
         {7, 20},
         {21, 7},
         {STOP_DRAWING, 0}};
@@ -296,8 +231,7 @@ void triangle()
 
 /******************************* VISUALIZATION ******************************/
 
-void vizN()
-{
+void vizN() {
     const int numpts = 5;
     Point pts[] = {
         {(MOVE_PEN) | 100, 100},
@@ -317,13 +251,12 @@ void vizN()
         drawingInterrupt();
 }
 
-void vizNoah()
-{
+void vizNoah() {
     const int numpts = 21;
     Point pts[] = {
         // N
         {(MOVE_PEN) | 100, 100},
-        {100, 200}, // put pen down then move
+        {100, 200},  // put pen down then move
         {200, 100},
         {200, 200},
         // O
@@ -335,15 +268,15 @@ void vizNoah()
         // A
         {(MOVE_PEN) | 320, 100},
         {370, 200},
-        {429, 100}, // bottom right
+        {429, 100},  // bottom right
         {(MOVE_PEN) | 320, 140},
         {420, 140},
         // H
-        {(MOVE_PEN) | 430, 200}, // left line
+        {(MOVE_PEN) | 430, 200},  // left line
         {430, 100},
-        {(MOVE_PEN) | 530, 200}, // right line
+        {(MOVE_PEN) | 530, 200},  // right line
         {530, 100},
-        {(MOVE_PEN) | 430, 150}, // horizontal line
+        {(MOVE_PEN) | 430, 150},  // horizontal line
         {530, 150},
         {STOP_DRAWING, 0}};
     std::queue<Point> q;
@@ -359,16 +292,16 @@ void vizNoah()
         drawingInterrupt();
 }
 
-void vizFile(char *filePath)
-{
+extern bool queueLowFlag;
+
+void vizFile(char *filePath) {
     // Open file
     std::ifstream file;
     file.open(filePath);
 
     if (file.is_open())
         std::cout << "Opened file: " << filePath << std::endl;
-    else
-    {
+    else {
         std::cout << "ERROR: couldn't open file" << std::endl;
         return;
     }
@@ -381,12 +314,10 @@ void vizFile(char *filePath)
     uint16_t px, py;
     px = py = 0;
     bool movePen = false;
-    while (std::getline(file, line))
-    {
+    while (std::getline(file, line)) {
         if (line.compare("MOVE") == 0)
             movePen = true;
-        else
-        {
+        else {
             int pos = line.find(" ");
             assert(0 < pos && pos < 5, "space in range");
             int16_t x, y;
@@ -395,11 +326,10 @@ void vizFile(char *filePath)
             estimatedSteps += std::max(std::abs(x - px), std::abs(y - py));
 
             // Encode the x value
-            x &= ~FLAG_MASK; // remove flag bits
+            x &= ~FLAG_MASK;  // remove flag bits
             if (movePen)
                 x |= MOVE_PEN;
 
-            // std::cout << "X: " << x << " Y: " << y << std::endl;
             Point newPt = {x, y};
             q.push(newPt);
             movePen = false;
@@ -411,24 +341,27 @@ void vizFile(char *filePath)
     std::cout << "\t> Done generating queue of size " << q.size() << "\n";
     std::cout << "\t> Estimated steps " << estimatedSteps << std::endl;
 
-    drawLoopCounter = q.size();
+    drawLoopCounter = q.size();  // Doesn't actually matter because it will leave when buffer is full
     drawing();
-    assert(q.size() == 0);
 
     std::cout << "Running drawing interrupt...\n";
-    while (continueDrawing)
+    while (continueDrawing) {
+        if (queueLowFlag) {
+            queueLowFlag = false;
+            drawingLoop();
+        }
         drawingInterrupt();
+    }
     std::cout << "done drawing!\n";
     std::string savePath = std::string(filePath);
     int len = savePath.length();
-    savePath = savePath.substr(len - 5, len).append(".bmp");
+    savePath = savePath.substr(0, len - 6).append(".bmp");
 
     saveCanvas(savePath.c_str());
     std::cout << "DONE CREATING VIZUALIZTION IMAGE\n\t> " << savePath << std::endl;
 }
 
-int runVizualization(char *arg)
-{
+int runVizualization(char *arg) {
     std::string argstr = std::string(arg);
     std::cout << "Searching for viz function \"" << argstr << "\"\n";
     struct test images[] = {
@@ -438,10 +371,9 @@ int runVizualization(char *arg)
 
     // Check if string matches any of the viz functions
     for (struct test *t = images; t->f != 0; t++)
-        if (t->s.compare(argstr) == 0)
-        {
+        if (t->s.compare(argstr) == 0) {
             std::cout << "Vizualizing " << t->s << std::endl;
-            t->f(); // Run the vizualization
+            t->f();  // Run the vizualization
             std::string savePath = t->s.append(".bmp");
             saveCanvas(savePath.c_str());
             std::cout << "Done creating " << savePath << std::endl;
@@ -452,14 +384,12 @@ int runVizualization(char *arg)
     return -1;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     initMock();
 
-    if (argc < 2) // No other arguments passed
+    if (argc < 2)  // No other arguments passed
     {
         struct test tests[] = {
-            {writesLowAfterHigh, "writesLowAfterHigh"},
             {emergencyStop, "emergencyStop"},
             {horizontal, "horizontal"},
             {vertical, "vertical"},
@@ -470,8 +400,7 @@ int main(int argc, char *argv[])
             {0, ""}};
 
         runTests("Drawing", tests);
-    }
-    else // Vizualize argument passed
+    } else  // Vizualize argument passed
     {
         std::string input = argv[1];
 

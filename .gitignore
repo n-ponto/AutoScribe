@@ -8,11 +8,15 @@ test.py
 *\__pycache__
 
 *.ncode
+*.log
 
 # Makefile
 *.exe
 *.o
+
+# Images
 *.bmp
+*.jpg
 
 # 3D Printing Models
 *.stl

@@ -31,6 +31,7 @@ public:
     void println(const char *);
     void print(unsigned long, int);
     void println(unsigned long, int);
+    size_t write(uint8_t);
     int available();
     size_t readBytes(char *buffer, size_t length);
 };
