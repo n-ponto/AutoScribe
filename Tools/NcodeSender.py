@@ -52,6 +52,7 @@ class NcodeSender:
                 output.append((x, y))
                 movePen = False
         print("Done parsing file")
+        print(f"{len(output)} coordinate pairs to send")
         return output
     
     def send(self, filepath: str) -> bool:
@@ -68,11 +69,35 @@ class NcodeSender:
         # Start drawing mode
         self._serial.writeByte(Commands.ENTER_DRAW_MODE)
         time.sleep(0.2)
-        self._serial.read()
-        input("Press enter to send drawing data...")
+        self._serial.readStr()
+        # input("Press enter to send drawing data...")
 
         try:
-            for x, y in data:
+            i: int = 0
+            # Start by filling the buffer
+            print(f"Sending a total of {len(data)} coordinate pairs")
+            print("Initially filling buffer")
+            while i < len(data) and i < 128:
+                x, y = data[i]
+                self._serial.writePoint(x, y)
+                i += 1
+            # Batch the rest
+            print(f"Done filling buffer i={i}")
+            prev = i
+            while i < len(data):
+                # Wait for the low signal
+                print("Waiting for signal")
+                while self._serial.readByte() != 0xFF:
+                    time.sleep(.2)
+                # Send in batches of 3/4 max size
+                print("Received signal, sending more bytes")
+                while i < len(data) and i < prev+96:
+                    x, y = data[i]
+                    self._serial.writePoint(x, y)
+                    i += 1
+                print("Done sending more bytes")
+                prev = i
+
                 self._serial.writePoint(x, y)
             # Finally send end signal
             print('Done sending all coordinates')
@@ -83,7 +108,7 @@ class NcodeSender:
             self._serial.flushTxBuffer()
             self._serial.writePoint(Drawing.EMERGENCY_STOP, 0)
             time.sleep(0.2)
-            self._serial.read()
+            self._serial.readStr()
             print("Ending process")
             return False
         return True

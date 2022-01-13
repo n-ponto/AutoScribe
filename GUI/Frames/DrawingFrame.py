@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(__file__) + "/../..")
 from Tools.SerialPort import SerialPort
 from Tools.NcodeSender import NcodeSender
 from Tools.Encodings import *
+from Tools.NcodeVizualizer import show_ncode
 
 class DrawingFrame(tk.Frame):
     '''
@@ -18,6 +19,7 @@ class DrawingFrame(tk.Frame):
     _filename: str = None
     _lbl_file: tk.Label
     _btn_send: tk.Button
+    _btn_viz: tk.Button
     
 
     def __init__(self, master: tk.Misc, sp: SerialPort):
@@ -32,6 +34,9 @@ class DrawingFrame(tk.Frame):
 
         self._lbl_file = tk.Label(self, text="Please select a file.")
         self._lbl_file.pack(padx=5, pady=5)
+
+        self._btn_viz = tk.Button(self, text="Vizualize", command=self._vizualize, state='disabled')
+        self._btn_viz.pack(padx=5, pady=5)
 
         self._btn_send = tk.Button(self, text="Send Ncode", command=self._send, state='disabled')
         self._btn_send.pack(padx=5, pady=5)
@@ -54,6 +59,10 @@ class DrawingFrame(tk.Frame):
         self._filename = path
         self._lbl_file.config(text=self._filename)
         self._btn_send['state'] = 'normal'
+        self._btn_viz['state'] = 'normal'
+
+    def _vizualize(self):
+        show_ncode(self._filename)
 
     def _send(self):
         #TODO: check file is valid again?
@@ -71,4 +80,4 @@ if __name__ == "__main__":
     sp.awaitResponse()
 
     root.mainloop()
-    sp.read()
+    sp.readStr()

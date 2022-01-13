@@ -1,7 +1,7 @@
 # Takes a SVG file then creates an ncode file and a BMP vizualization of the drawing
 
 image_file=$1
-save_file=testSvg.ncode
+save_file=out/testSvg.ncode
 
 # Remove the previous save file
 rm $save_file
@@ -16,7 +16,7 @@ if (cd CTests && make draw); then
         printf "\nVizualizing $save_file\n"
         if $test_command; then  # Vizualize the ncode
             # code $save_file  # Open the ncode file
-            code testSvg.bmp  # Open the viz image
+            code out/testSvg.bmp  # Open the viz image
             printf "All stages of vizualization succeeded"
         else
             printf "Failed to vizualize $save_file\n"

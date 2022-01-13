@@ -9,6 +9,7 @@ Default font is 8 pixels high by 5 pixels wide
 */
 
 #include <Nokia_LCD.h>
+
 #include "Hardware.h"
 
 #define FONT_HEIGHT 8
@@ -54,23 +55,20 @@ const unsigned char start_screen[504] PROGMEM= {
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 };
 
-void displayHeader(const char *mode)
-{
+void displayHeader(const char *mode) {
     lcd.clear();
-    if (!lcd.setCursor(0, 0)) // Top left
+    if (!lcd.setCursor(0, 0))  // Top left
         Serial.println("displayHeader out of bounds error");
     lcd.print(mode);
 }
 
-void initCoordinateDisplay()
-{
+void initCoordinateDisplay() {
     const char coordText[] = "X 0000  Y 0000";
     lcd.setCursor(0, BOTTOM_ROW);
     lcd.print(coordText);
 }
 
-void clearCoord(uint16_t coord)
-{
+void clearCoord(uint16_t coord) {
     const char space = ' ';
     if (coord < 1000)
         lcd.print(space);
@@ -82,8 +80,7 @@ void clearCoord(uint16_t coord)
 
 /*********************** Public Functions *************************************/
 
-void displayInit()
-{
+void displayInit() {
     // Set up display pins
     pinMode(DSP_PIN_CLK, OUTPUT);
     pinMode(DSP_PIN_DIN, OUTPUT);
@@ -92,25 +89,22 @@ void displayInit()
     pinMode(DSP_PIN_RST, OUTPUT);
     pinMode(DSP_PIN_BL, OUTPUT);
     // Set up lcd
-    lcd.begin();            // Initialize the screen
-    lcd.setContrast(60);    // Should be 40-60
-    lcd.clear();        // Fill screen with black pixels
+    lcd.begin();          // Initialize the screen
+    lcd.setContrast(60);  // Should be 40-60
+    lcd.clear();          // Fill screen with black pixels
     lcd.draw(start_screen, sizeof(start_screen), true);
 }
 
-void displayManualControl()
-{
+void displayManualControl() {
     displayHeader("MANUAL CONTROL");
     initCoordinateDisplay();
 }
 
-void displayDrawing()
-{
+void displayDrawing() {
     displayHeader("DRAWING");
 }
 
-void updateCoordinateDisplay(int16_t x, int16_t y)
-{
+void updateCoordinateDisplay(int16_t x, int16_t y) {
     // Coordinates are left aligned
     lcd.setCursor(FONT_WIDTH * 2, BOTTOM_ROW);
     lcd.print(x);
@@ -118,4 +112,10 @@ void updateCoordinateDisplay(int16_t x, int16_t y)
     lcd.setCursor(FONT_WIDTH * 10, BOTTOM_ROW);
     lcd.print(y);
     clearCoord(y);
+}
+
+void updateInstructionCountDisplay(int count) {
+    lcd.setCursor(0, BOTTOM_ROW);
+    lcd.print(count);
+    clearCoord(count);
 }

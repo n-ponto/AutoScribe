@@ -32,7 +32,7 @@ Constants for hardware pins, constant values, and defaults
 // Defaults
 #define DEFAULT_UP 50              // Angle for when the pen is up off the paper
 #define DEFAULT_DOWN 70            // Angle when pen is down on the paper
-#define DEFAULT_STEPPER_DELAY 2000 // Microsecond delay between stepper pulses
+#define DEFAULT_STEPPER_DELAY 4000 // Microsecond delay between stepper pulses
 #define DEFAULT_PEN_DELAY 500      // Millisecond delay to pause while the pen goes up/down
 
 #endif //HARDWARE_H_

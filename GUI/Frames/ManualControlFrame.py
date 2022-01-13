@@ -65,7 +65,7 @@ class ManualControlFrame(tk.Frame):
         print("Starting manual control")
         self._serial.writeByte(Commands.ENTER_MANUAL_CONTROL_MODE)
         time.sleep(0.1)  # Wait for manual control mode to start
-        self._serial.read()
+        self._serial.readStr()
         self._btn_end['state'] = 'normal'
 
     def _end(self):
@@ -77,7 +77,7 @@ class ManualControlFrame(tk.Frame):
         self.unbind("<KeyRelease>")
         self._serial.writeByte(MCKeys.STOP)  # Send stop signal
         time.sleep(0.1)  # Wait for manual control mode to stop
-        self._serial.read()  # Read from serial
+        self._serial.readStr()  # Read from serial
         self._btn_start['state'] = 'normal'
 
     def _keypress(self, event):
@@ -112,4 +112,4 @@ if __name__ == "__main__":
     sp.awaitResponse()
 
     root.mainloop()
-    sp.read()
+    sp.readStr()

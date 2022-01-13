@@ -51,11 +51,8 @@ def get_bezier_points(points: list):
     degree: int = len(points) - 1
     curve = bezier.Curve(nodes, degree=degree)
     # Figure out how many points we want along the curve
-    count = int(np.max(np.abs(nodes[:, 0] - nodes[:, -1]))) - 1 # max x/y change
+    count = int(np.min(np.abs(nodes[:, 0] - nodes[:, -1]))) - 1 # min x/y change
     logger.debug(f"\tcount {count}")
-    axis = curve.plot(count)
-    plt.gca().invert_yaxis()
-    # plt.show()
     s_vals = np.linspace(0, 1.0, count)
     # Get the points along the curve from the object
     eval: np.ndarray = curve.evaluate_multi(s_vals)
@@ -64,7 +61,7 @@ def get_bezier_points(points: list):
     prev = points[0]
     for i in range(count):
         x, y = eval[:, i]
-        if (x == prev[0] and y == prev[1]):
+        if (round(x) == round(prev[0]) and round(y) == round(prev[1])):
             continue # Skip copies
         output.append((x, y))
         prev = (x, y)

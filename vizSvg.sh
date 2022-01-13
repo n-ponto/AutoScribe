@@ -1,14 +1,14 @@
 # Takes a SVG file then creates an ncode file and a BMP vizualization of the drawing
 
 image_file=$1
-save_file=vizSvg.ncode
+save_file=out/vizSvg.ncode
 
 # Remove the previous save file
 rm $save_file
 
 # Define the commands
 parse_svg_command="python ./ImageProcessor/svg_parser.py $image_file $save_file"
-viz_command="python ./ImageProcessor/vizualize_ncode.py $save_file"
+viz_command="python ./Tools/NcodeVizualizer.py $save_file"
 
 printf "Translating $image_file into $save_file\n"
 if (cd CTests && make draw); then
@@ -16,7 +16,7 @@ if (cd CTests && make draw); then
         printf "\nVizualizing $save_file\n"
         if $viz_command; then  # Vizualize the ncode
             # code $save_file  # Open the ncode file
-            code vizSvg.jpg  # Open the viz image
+            code vizSvg.bmp  # Open the viz image
             printf "All stages of vizualization succeeded"
         else
             printf "Failed to vizualize $save_file\n"

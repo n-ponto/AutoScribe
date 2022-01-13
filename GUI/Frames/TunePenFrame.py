@@ -42,7 +42,7 @@ class PenAngleEntry(tk.Entry):
         if (MIN_ANGLE <= value and value <= MAX_ANGLE):
             self._serial.writeByte(value)
             time.sleep(0.1)
-            self._serial.read()
+            self._serial.readStr()
             return
         print(f"[ERROR] invalid value {self.get()}")
 
@@ -80,17 +80,17 @@ class TunePenFrame(tk.Frame):
         # Leave change pen angle command
         self._serial.writeByte(0xFF)
         time.sleep(0.1)
-        self._serial.read()
+        self._serial.readStr()
         # Set pen range
         self._serial.writeByte(Commands.SET_PEN_RANGE)
         self._serial.writeByte(int(self._ent_up.get()))
         self._serial.writeByte(int(self._ent_down.get()))
         time.sleep(0.1)
-        self._serial.read()
+        self._serial.readStr()
         # Re-enter change pen angle
         self._serial.writeByte(Commands.CHANGE_PEN_ANGLE)
         time.sleep(0.1)
-        self._serial.read()
+        self._serial.readStr()
 
     def _focusIn(self, event):
         '''
@@ -99,7 +99,7 @@ class TunePenFrame(tk.Frame):
         print("Focus in on tune pen frame")
         self._serial.writeByte(Commands.CHANGE_PEN_ANGLE)
         time.sleep(0.1)
-        self._serial.read()
+        self._serial.readStr()
 
     def _focusOut(self, event=None):
         '''
@@ -108,7 +108,7 @@ class TunePenFrame(tk.Frame):
         print("Focus out on tune pen frame")
         self._serial.writeByte(0xFF)
         time.sleep(0.1)
-        self._serial.read()
+        self._serial.readStr()
 
 ################################################################################
 
@@ -122,4 +122,4 @@ if __name__ == "__main__":
     sp.awaitResponse()
 
     root.mainloop()
-    sp.read()
+    sp.readStr()

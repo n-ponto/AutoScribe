@@ -64,7 +64,7 @@ def Settings(master: tk.Misc, serial: SerialPort) -> tk.Frame:
             serial.writeShort(s)
             speed = s
         sleep(0.1)
-        serial.read()
+        serial.readStr()
 
     # Update Button
     n+=1
@@ -74,7 +74,7 @@ def Settings(master: tk.Misc, serial: SerialPort) -> tk.Frame:
     # Reset Home Function
     def handleResetHome():
         serial.writeByte(Commands.RESET_HOME)
-        serial.read()
+        serial.readStr()
 
     n+=1
     btn_rsthm = tk.Button(master=frame, text="Reset Home", command=handleResetHome)

@@ -14,9 +14,9 @@ def overlapImages(bmp_file: str, jpg_file: str):
     alpha = 0.5
     beta = (1.0 - alpha)
     combo = cv2.addWeighted(tst_img, alpha, viz_img, beta, 0.0)
-    cv2.imshow("overlapped", combo)
+    # cv2.imshow("overlapped", combo)
     cv2.waitKey(0)
-    if cv2.imwrite("overlapped.bmp", combo):
+    if cv2.imwrite("out/overlapped.bmp", combo):
     # if cv2.imwrite("overlapped.jpg", combo):
         print(f"Saved overlapping image {combo.shape[0]}px x {combo.shape[1]}px")
     else:

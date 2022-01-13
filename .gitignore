@@ -4,6 +4,7 @@ build
 grbl_refrence
 CNC_Shield_Demo
 *\images
+out
 test.py
 *\__pycache__
 

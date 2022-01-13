@@ -11,6 +11,7 @@ void displayManualControl();
 void displayDrawing();
 
 void updateCoordinateDisplay(int16_t x, int16_t y);
+void updateInstructionCountDisplay(int count);
 
 
 #endif // DISPLAY_H_

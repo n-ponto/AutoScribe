@@ -20,16 +20,22 @@ class SerialPort():
         while(self._port.in_waiting < 1):
             pass
         time.sleep(0.5)
-        self.read()
+        self.readStr()
 
-    def read(self):
+    def readStr(self):
         if self._port.in_waiting > 0:
             while(self._port.in_waiting > 0):
                 readStr: str = self._port.readline().decode("utf-8").rstrip()
                 print(f"{cc.OKCYAN}[ARDUINO] {readStr}{cc.ENDC}")
         else:
             print("Nothing to read.")
-            return None
+            return 
+            
+    def readByte(self) -> int:
+        if self._port.in_waiting > 0:
+            byte = int.from_bytes(self._port.read(), 'big')
+            return byte
+        return None
 
     def write(self, x: bytes):
         assert(type(x) == bytes)

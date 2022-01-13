@@ -215,7 +215,12 @@ void drawingLoop() {
     read = {0, 0};
     uint16_t flags;
     bool checkQueue = false;
+    int instructionCount = 0;
+    uint8_t loopCount = 0;
     while (continueDrawing) {
+        if (++loopCount == 0)
+            updateInstructionCountDisplay(instructionCount);
+
         if (isFull(&queue)) {
 #ifdef TESTING
             printf("BUFFER FULL\n");
@@ -226,10 +231,12 @@ void drawingLoop() {
         }
 
         // Send signal when queue gets too small
-        if (queue.curSz >= 15)
+        if (!checkQueue && queue.curSz >= 64) { // Max is 128 so this is half
             checkQueue = true;
-        else if (checkQueue && queue.curSz < 10) {
+            // Serial.println("It's over half.");
+        } else if (checkQueue && queue.curSz < 32) {  // Less than a quarter full
             Serial.write(0xFF);
+            // Serial.println("This is the signal.");
             checkQueue = false;
         }
 
@@ -259,6 +266,7 @@ void drawingLoop() {
 #endif
 
         prevCoordinate = read;  // Update the previous position
+        instructionCount++;
 #ifdef TESTING
         if (--drawLoopCounter < 1)
             return;

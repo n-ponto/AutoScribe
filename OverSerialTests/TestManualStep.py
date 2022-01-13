@@ -13,7 +13,7 @@ manualStepCommand: bytes = pack("B", commandIndex)
 print(f"Sending manual step command bit: {manualStepCommand}")
 arduino.write(manualStepCommand)
 time.sleep(0.5)
-arduino.read()
+arduino.readStr()
 
 print("Pen up")
 time.sleep(1)
@@ -48,7 +48,7 @@ for name in directions:
 print("Ending")
 arduino.writeByte(0b0000)
 time.sleep(0.5)
-arduino.read()
+arduino.readStr()
 
 
 # for i in range(number_commands):

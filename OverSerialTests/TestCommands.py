@@ -17,5 +17,5 @@ for i in range(number_commands):
     print(f"Command: {command}")
     arduino.write(command)
     time.sleep(0.8)
-    arduino.read()
+    arduino.readStr()
     print()
