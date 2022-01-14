@@ -16,7 +16,7 @@ if (cd CTests && make draw); then
         printf "\nVizualizing $save_file\n"
         if $viz_command; then  # Vizualize the ncode
             # code $save_file  # Open the ncode file
-            code vizSvg.bmp  # Open the viz image
+            code out/vizSvg.bmp  # Open the viz image
             printf "All stages of vizualization succeeded"
         else
             printf "Failed to vizualize $save_file\n"

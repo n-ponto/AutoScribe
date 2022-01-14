@@ -16,6 +16,7 @@
 void setRuntimeMode(void (*fn)());
 void acceptingCommands();
 void displayDrawing();
+void updateInstructionCountDisplay(int);
 void delay(int);
 
 class Servo

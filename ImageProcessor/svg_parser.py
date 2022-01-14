@@ -23,7 +23,7 @@ MOVETO = 'M'
 HORIZONTAL_LINETO = 'H'
 VERTIAL_LINETO = 'V'
 QUAD_BEZ_CURVETO = 'Q'
-CURVE = 'c'
+CUBE_BEZ_CURVETO = 'C'
 
 def get_svg_doc(filepath: str) -> md.Document:
     '''
@@ -139,20 +139,31 @@ def parse_path(path_string: list) -> list:
                 i += 1
                 logger.debug(f"\thorizontal to {prev_coord}")
             elif cmd == VERTIAL_LINETO:
-                y = float(parts[i+1]) # X val is next part
-                if relative: y += prev_coord[1]
+                if relative:
+                    v = 1
+                    y = prev_coord[1]
+                    while True:
+                        try:
+                            val = float(parts[i+v])
+                            y += val
+                            v += 1
+                        except ValueError: break
+                    v -= 1
+                else:
+                    y = float(parts[i+1]) # X val is next part
+                    v = 1                
                 x = prev_coord[0]
                 assert(x > 0 and y > 0), f"({x}, {y}) should be nonzero"
                 prev_coord = x, y
                 path_list.append(prev_coord)
-                i += 1
+                i += v
                 logger.debug(f"\tvertical to {prev_coord}")
             elif cmd == QUAD_BEZ_CURVETO:
                 logger.debug(f"\tquadratic bezier curve")
                 mode = ParseMode.QUAD_BEZ
-            elif cmd == CURVE:
-                print("\t> SVG file includes curves.")
-                return None
+            elif cmd == CUBE_BEZ_CURVETO:
+                logger.debug(f"\cubic bezier curve")
+                mode = ParseMode.CUBE_BEZ
             else:
                 print(f"\t> Can't handle command \"{part}\"")
                 return None
@@ -193,6 +204,24 @@ def parse_path(path_string: list) -> list:
                 prev_coord = end_pt
                 path_list.extend(points)
                 i += 1
+            ## Cubic bezier curve mode
+            elif mode == ParseMode.CUBE_BEZ:
+                ctrl_pt1 = parts[i].split(",")
+                ctrl_pt2 = parts[i+1].split(",")
+                end_pt = parts[i+2].split(",")
+                logger.debug(f"ctrl pt 1 \"{ctrl_pt1}\"")
+                logger.debug(f"ctrl pt 2 \"{ctrl_pt2}\"")
+                logger.debug(f"end pt \"{end_pt}\"")
+                for pt in [ctrl_pt1, ctrl_pt2, end_pt]:
+                    for k in [0, 1]:
+                        pt[k] = float(pt[k])
+                        if relative:
+                            pt[k] += prev_coord[k]
+                        assert(pt[k]>0), "Coordinates not negative"
+                points = get_bezier_points([prev_coord, ctrl_pt1, ctrl_pt2, end_pt])
+                prev_coord = end_pt
+                path_list.extend(points)
+                i += 2
             ## Unknown mode
             else:
                 print(f"[WARNING] unhandled mode {mode}")
@@ -227,6 +256,9 @@ def parse_svg(filepath: str) -> list:
         else:
             print("\t> path appended to list")
             output.extend(path_list)  # Add the path to the output list
+    # Return to start
+    output.append(MOVE_STR)
+    output.append((0, 0))
     return output
 
 def svg_to_ncode(svg_path: str, save_path: str):

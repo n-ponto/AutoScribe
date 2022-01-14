@@ -212,3 +212,7 @@ void delay(int) {
 
 void displayDrawing() {
 }
+
+void updateInstructionCountDisplay(int) {
+
+}
