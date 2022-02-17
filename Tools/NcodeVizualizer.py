@@ -3,41 +3,44 @@ import cv2
 import numpy as np
 sys.path.append(os.path.dirname(__file__) + "/..")
 from Tools.Encodings import NCODE_MOVE
+from Tools.NcodeParser import parse_ncode
 
 colorMove = (100, 30, 30)  # Color to make lines when the pen is moving (off the paper)
 colorDraw = (255, 0, 0) # Color to make lines when the pen is down and drawing
 
-def vizualize_ncode(ncode_file: str) -> np.ndarray:
-    # Open and read file
-    assert(ncode_file[-6:] == ".ncode"), f"Expected ncode file {ncode_file}"
-    print("Parsing ncode file...")
-    file = open(ncode_file, 'r')
-    assert(file is not None), f"Couldn't open file {ncode_file}"
+def coordinates_to_image(coordinates: list):
+    '''
+    Takes a list of ncode formatted commands
+    Returns the image in a numpy array of pixels
+    '''
     dst: np.ndarray = np.zeros((1200, 800, 3), np.uint8)
-    lines: list = file.readlines()
     move: bool = False
     prevPoint = (0, 0)
-    color = colorMove
-    for ln in lines:
-        ln = ln.strip()
-        if ln.upper() == NCODE_MOVE:
+    color = colorMove 
+    for coord in coordinates:
+        if coord == NCODE_MOVE:
             move = True
         else:
-            coords = ln.split(' ')
-            assert(len(coords) == 2), "expected {ln} to be coordinates"
-            x = int(coords[0])
-            y = int(coords[1])
-            assert(0 <= x and x <= 800)
-            assert(0 <= y and y <= 1200)
+            assert(len(coord) == 2), f"expected {coord} to be coordinates"
+            x, y = int(coord[0]), int(coord[1])
             if move:
                 color = colorMove
                 move = False
             else:
                 color = colorDraw
-            cv2.line(dst, prevPoint, (x,y), color, 1)
+            cv2.line(dst, prevPoint, (x, y), color, 1)
             prevPoint = (x, y)
-
     return dst
+
+def vizualize_ncode(ncode_file: str, save_path: str):
+    # Open and read file
+    coords: list = parse_ncode(ncode_file)
+    img: np.ndarray = coordinates_to_image(coords)
+    # Save the image
+    if cv2.imwrite(save_path, img):
+        print(f"Saved image to: {save_path}")
+    else:
+        print("ERROR SAVING IMAGE")
 
 def show_ncode(ncode_file: str):
     '''
@@ -47,7 +50,6 @@ def show_ncode(ncode_file: str):
     name = os.path.basename(ncode_file)
     cv2.imshow(name, img)
     cv2.waitKey(0)
-
                 
 if __name__ == '__main__':
     '''
@@ -69,9 +71,4 @@ if __name__ == '__main__':
         save_path = sys.argv[2]
 
     assert(save_path[-4:] == ".bmp"), f"Expected bmp file {save_path}"
-    img = vizualize_ncode(ncode)
-    # Save the image
-    if cv2.imwrite(save_path, img):
-        print(f"Saved image to: {save_path}")
-    else:
-        print("ERROR SAVING IMAGE")
+    vizualize_ncode(ncode, save_path)

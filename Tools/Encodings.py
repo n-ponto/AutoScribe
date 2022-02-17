@@ -2,7 +2,7 @@
 Definitions for encoding messages when sending over the serial port
 Ensure that these encodings match with what the Ardino code expects to receive. 
 '''
-
+# Proprietary string encoding to convey the move command
 NCODE_MOVE = 'MOVE'
 
 # Defined in Commands.h
