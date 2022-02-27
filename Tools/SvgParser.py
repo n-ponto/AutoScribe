@@ -4,11 +4,11 @@ import bezier
 from xml.dom import minidom as md
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import logging
 import enum
 from Encodings import NCODE_MOVE
-from NcodeVizualizer import coordinates_to_image
+from NcodeVizualizer import coordinates_to_image, coordinates_onto_image
 
 # Set up logging
 logging_path = 'svg_parser.log'
@@ -29,6 +29,15 @@ HORIZONTAL_LINETO = 'H'
 VERTIAL_LINETO = 'V'
 QUAD_BEZ_CURVETO = 'Q'
 CUBE_BEZ_CURVETO = 'C'
+
+# Colors to use when vizualizing parts of the SVG in different colors
+VIZ_COLORS = {
+    "red":      (0,   0, 255),
+    "orange":   (0, 200, 255),
+    "green":    (0, 255,   0),
+    "blue":     (255,   0,   0),
+    "purple":   (255,   0, 255)
+}
 
 
 def get_svg_doc(filepath: str) -> md.Document:
@@ -90,14 +99,22 @@ def get_bezier_points(points: list):
     return output
 
 
+class VizMode(enum.Enum):
+    # Depth level to vizualize the file
+    NONE = 0    # Don't vizualize anything
+    WHOLE = 1   # Vizualize the entire SVG in one color
+    PATHS = 2   # Make each path it's own color
+    PARTS = 3   # Make each part of each path it's own color
+
+
 class ParseMode(enum.Enum):
     # Enum to keep track of the mode as the parser encounters different commands
-    LINETO = 0
-    QUAD_BEZ = 1
-    CUBE_BEZ = 2
+    LINETO = 0      # Drawing straight lines between coordinates
+    QUAD_BEZ = 1    # Quadratic bezier curve
+    CUBE_BEZ = 2    # Cubic bezier curve
 
 
-def path_to_coordinates(path_string: list) -> list:
+def path_to_coordinates(path_string: list, viz_mode=VizMode.NONE, img: np.ndarray = None) -> list:
     '''
     Takes the string format of the SVG path object
     Returns a list of ncode commands for that path, or None on failure
@@ -113,6 +130,18 @@ def path_to_coordinates(path_string: list) -> list:
     open_coord = None
     mode: ParseMode = ParseMode.LINETO
     i = 0
+
+    # For vizualization
+    vizualizing = viz_mode == VizMode.PARTS
+    if (vizualizing): 
+        color_list = list(VIZ_COLORS)  # Colors for viz paths
+        color_idx = 0
+        viz_leftoff = 0
+        def viz_part(coords: list, start_coord):
+            color_str = color_list[color_idx]
+            logger.debug(f"\tcolor: {color_str}")
+            coordinates_onto_image(coords, img, VIZ_COLORS[color_str], start_coord)
+            return (color_idx + 1) % len(VIZ_COLORS)
 
     # Handle relative move as first element
     if (parts[0] == RELATIVE_MOVETO):
@@ -130,8 +159,9 @@ def path_to_coordinates(path_string: list) -> list:
 
     while i < len(parts):
         part = parts[i]
-        prt_fmt = (f"\"{part}\"").ljust(30)
-        coord_fmt = str(prev_coord).ljust(25)
+        prt_fmt = (f"\"{part}\"").ljust(25)
+        coord_fmt = (
+            f"({round(prev_coord[0], 3)}, {round(prev_coord[1], 3)})").ljust(25)
         logger.debug(f"PART {prt_fmt} current coord: {coord_fmt} mode: {mode}")
         coords: list = part.split(",")
         # Handle command
@@ -259,11 +289,20 @@ def path_to_coordinates(path_string: list) -> list:
         else:
             print(f"[WARNING] Can't parse part of path \"{part}\"")
             return None
+        # Vizualize
+        if (vizualizing and len(path_list) > viz_leftoff):
+            if (len(path_list) - viz_leftoff < 2 and path_list[viz_leftoff] == NCODE_MOVE):
+                # Only thing to vizualize is a move
+                pass
+            else:
+                sc = (0, 0) if viz_leftoff < 1 else path_list[viz_leftoff-1]
+                color_idx = viz_part(path_list[viz_leftoff:], sc)
+                viz_leftoff = len(path_list)
         i += 1
     return path_list
 
 
-def svg_to_coordinates(filepath: str) -> list:
+def svg_to_coordinates(filepath: str, vizMode=VizMode.NONE, img: np.ndarray = None) -> list:
     '''
     Take a path to a svg file and parse out the coordinate endpoints
     Returns a list of ncode coordinates
@@ -276,19 +315,30 @@ def svg_to_coordinates(filepath: str) -> list:
     doc.unlink()  # Clean up the not needed dom tree
 
     output = []  # List for storing outpoint coordiantes
-
+    if vizMode == VizMode.PATHS:
+        color_list = list(VIZ_COLORS)  # Colors for viz paths
+        prev_coord = (0, 0)
     print(f"Found {len(coordinate_strs)} different paths in the file")
     for i, path_string in enumerate(coordinate_strs):
-        logger.debug(f"Path #{i}")
-        path_list = path_to_coordinates(path_string)
+        if vizMode == VizMode.PATHS:
+            color_str = color_list[i % len(VIZ_COLORS)]
+            logger.debug(f"Path #{i}\tcolor={color_str}")
+        else:
+            logger.debug(f"Path #{i}")
+        path_list = path_to_coordinates(path_string, vizMode, img)
         if path_list is None:
             print("\t> path_to_coordinates returned none, path not appended")
         else:
             print("\t> path appended to list")
+            if vizMode == VizMode.PATHS:
+                prev_coord = coordinates_onto_image(
+                    path_list, img, VIZ_COLORS[color_str], prev_coord)
             output.extend(path_list)  # Add the path to the output list
     # Return to origin at the end
     output.append(NCODE_MOVE)
     output.append((0, 0))
+    if vizMode == VizMode.WHOLE:
+        coordinates_onto_image(output, img)
     return output
 
 
@@ -322,20 +372,21 @@ def svg_to_ncode(svg_path: str, save_path: str):
     print("INTO NCODE: " + filepath)
     file.close()
 
+
 SAVE_PATH = "viz_svg.bmp"
-def viz_svg(svg_path: str):
+
+
+def viz_svg(svg_path: str, vizMode=VizMode.WHOLE):
     '''
     Takes the path to a SVG file and saves an image showing the parsed output
     '''
-    coordinates: list = svg_to_coordinates(svg_path)
-    img: np.ndarray = coordinates_to_image(coordinates)
+    img: np.ndarray = np.zeros((1200, 800, 3), np.uint8)
+    svg_to_coordinates(svg_path, vizMode, img)
     # Save the image
     if cv2.imwrite(SAVE_PATH, img):
-        print(f"Saved image to: {SAVE_PATH}")
+        print(f"Saved image to: {os.path.join('./', SAVE_PATH)}")
     else:
         print("ERROR SAVING IMAGE")
-
-
 
 
 if __name__ == '__main__':
@@ -349,18 +400,27 @@ if __name__ == '__main__':
         exit()
 
     svg_path: str = sys.argv[1]
+    assert(svg_path[-4:].lower() == ".svg")
 
+    # No save path
     if (len(sys.argv) < 3):
-        # Only provided svg file
         save_path = svg_path[:-4] + ".ncode"
         print(f"[SAVE PATH]: {save_path}")
-    elif sys.argv[2].strip().lower() == "viz":
-        viz_svg(svg_path)
-        exit()
+        svg_to_ncode(svg_path, save_path)
+    # Save path provided
+    elif sys.argv[2].strip()[:-4].lower() == ".ncode":
+        svg_to_ncode(svg_path, sys.argv[2])
+    # Vizualize whole document
+    elif sys.argv[2].strip().lower() == "vizwhole":
+        viz_svg(svg_path, VizMode.WHOLE)
+    # Vizualize seperate paths
+    elif sys.argv[2].strip().lower() == 'vizpaths':
+        viz_svg(svg_path, VizMode.PATHS)
+    # Vizualize seperate parts
+    elif sys.argv[2].strip().lower() == 'vizparts':
+        viz_svg(svg_path, VizMode.PARTS)
     else:
-        save_path = sys.argv[2]
-
-    svg_to_ncode(svg_path, save_path)
+        print(f"[ERROR] couldn't interpret 2nd argument {sys.argv[2]}")
 
 
 '''

@@ -1,12 +1,14 @@
-import os, sys
+from NcodeParser import parse_ncode
+from Encodings import NCODE_MOVE
+import os
+import sys
 import cv2
 import numpy as np
-sys.path.append(os.path.dirname(__file__) + "/..")
-from Tools.Encodings import NCODE_MOVE
-from Tools.NcodeParser import parse_ncode
 
-colorMove = (100, 30, 30)  # Color to make lines when the pen is moving (off the paper)
-colorDraw = (255, 0, 0) # Color to make lines when the pen is down and drawing
+# Color to make lines when the pen is moving (off the paper)
+COLOR_MOVE = (60, 60, 60)
+COLOR_DRAW = (255, 0, 0)  # Color to make lines when the pen is down and drawing
+
 
 def coordinates_to_image(coordinates: list):
     '''
@@ -14,9 +16,20 @@ def coordinates_to_image(coordinates: list):
     Returns the image in a numpy array of pixels
     '''
     dst: np.ndarray = np.zeros((1200, 800, 3), np.uint8)
+    coordinates_onto_image(coordinates, dst)
+    return dst
+
+
+def coordinates_onto_image(coordinates: list, img: np.ndarray, color = COLOR_DRAW, prevPoint = (0, 0)):
+    '''
+    Takes list of ncode formatted coordinates, an image, and the color to draw
+    Prev point is the starting point (where the pen would be before starting this set of coordinates)
+    Draws the coordinates in that color on the image
+    '''
+    assert(len(color) == 3)
+    prevPoint = tuple(int(c) for c in prevPoint)
     move: bool = False
-    prevPoint = (0, 0)
-    color = colorMove 
+    active_color = color
     for coord in coordinates:
         if coord == NCODE_MOVE:
             move = True
@@ -24,13 +37,14 @@ def coordinates_to_image(coordinates: list):
             assert(len(coord) == 2), f"expected {coord} to be coordinates"
             x, y = int(coord[0]), int(coord[1])
             if move:
-                color = colorMove
+                active_color = COLOR_MOVE
                 move = False
             else:
-                color = colorDraw
-            cv2.line(dst, prevPoint, (x, y), color, 1)
+                active_color = color
+            cv2.line(img, prevPoint, (x, y), active_color, 1)
             prevPoint = (x, y)
-    return dst
+    return prevPoint
+
 
 def vizualize_ncode(ncode_file: str, save_path: str):
     # Open and read file
@@ -42,6 +56,7 @@ def vizualize_ncode(ncode_file: str, save_path: str):
     else:
         print("ERROR SAVING IMAGE")
 
+
 def show_ncode(ncode_file: str):
     '''
     Vizualizes the ncode then opens a new window showing the image
@@ -50,7 +65,8 @@ def show_ncode(ncode_file: str):
     name = os.path.basename(ncode_file)
     cv2.imshow(name, img)
     cv2.waitKey(0)
-                
+
+
 if __name__ == '__main__':
     '''
     Takes a ncode file as an argument and saves an image of the intended output

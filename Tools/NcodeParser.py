@@ -1,7 +1,7 @@
 '''
 Takes an Ncode file and returns the list of coordinates
 '''
-from Tools.Encodings import NCODE_MOVE
+from Encodings import NCODE_MOVE
 
 def parse_ncode(ncode_file: str) -> list:
     '''
