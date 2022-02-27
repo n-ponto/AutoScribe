@@ -105,7 +105,7 @@ def get_bezier_points(points: list):
     # Figure out how many points we want along the curve
     diffs = np.max(nodes, axis=1) - np.min(nodes, axis=1)
     logger.debug(f"\tdiffs {diffs}")
-    count = int(np.min(diffs)) - 1  # max x/y change
+    count = round(np.min(diffs)) - 1  # max x/y change
     logger.debug(f"\tcount {count}")
     if count < 1:
         return [points[-1]]
@@ -141,7 +141,7 @@ def path_to_coordinates(path_string: list, va: VizualizationAid = None) -> list:
 
     logger.debug(path_string)
     parts: list = path_string.split(" ")
-    assert(parts[0].lower() == 'm')  # First part should be M for move ?
+    assert(parts[0].lower() == 'm'), f"expected path to start with \"m\" but was {parts[0]}"
 
     # Each part should be a coordinate pair
     relative = False  # Coordinates are relative or absolute
@@ -230,7 +230,7 @@ def path_to_coordinates(path_string: list, va: VizualizationAid = None) -> list:
                 logger.debug(f"\tquadratic bezier curve")
                 mode = ParseMode.QUAD_BEZ
             elif cmd == CUBE_BEZ_CURVETO:
-                logger.debug(f"\cubic bezier curve")
+                logger.debug(f"\tcubic bezier curve")
                 mode = ParseMode.CUBE_BEZ
             else:
                 print(f"\t> Can't handle command \"{part}\"")
