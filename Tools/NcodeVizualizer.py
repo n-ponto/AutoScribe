@@ -20,14 +20,14 @@ def coordinates_to_image(coordinates: list):
     return dst
 
 
-def coordinates_onto_image(coordinates: list, img: np.ndarray, color = COLOR_DRAW, prevPoint = (0, 0)):
+def coordinates_onto_image(coordinates: list, img: np.ndarray, color = COLOR_DRAW, prev_point = (0, 0)):
     '''
     Takes list of ncode formatted coordinates, an image, and the color to draw
     Prev point is the starting point (where the pen would be before starting this set of coordinates)
     Draws the coordinates in that color on the image
     '''
     assert(len(color) == 3)
-    prevPoint = tuple(int(c) for c in prevPoint)
+    prev_point = tuple(int(c) for c in prev_point)
     move: bool = False
     active_color = color
     for coord in coordinates:
@@ -41,9 +41,9 @@ def coordinates_onto_image(coordinates: list, img: np.ndarray, color = COLOR_DRA
                 move = False
             else:
                 active_color = color
-            cv2.line(img, prevPoint, (x, y), active_color, 1)
-            prevPoint = (x, y)
-    return prevPoint
+            cv2.line(img, prev_point, (x, y), active_color, 1)
+            prev_point = (x, y)
+    return prev_point
 
 
 def vizualize_ncode(ncode_file: str, save_path: str):
