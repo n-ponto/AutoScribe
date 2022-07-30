@@ -62,19 +62,22 @@ class TunePenFrame(tk.Frame):
         self._render()
 
     def _render(self):
+        title = tk.Label(master=self, text="Tune Pen", font='Helvetica 12 bold')
+        title.grid(row=0, columnspan=2, pady=5)
+
         lbl_up = tk.Label(master=self, text="Up angle: ")
         self._ent_up = PenAngleEntry(self, self._serial, 50)
-        lbl_up.grid(row=0, column=0)
-        self._ent_up.grid(row=0, column=1)
+        lbl_up.grid(row=1, column=0)
+        self._ent_up.grid(row=1, column=1)
 
         lbl_down = tk.Label(master=self, text="Down angle: ")
         self._ent_down = PenAngleEntry(self, self._serial, 70)
-        lbl_down.grid(row=1, column=0)
-        self._ent_down.grid(row=1, column=1)
+        lbl_down.grid(row=2, column=0)
+        self._ent_down.grid(row=2, column=1)
         # Update button
         btn_update = tk.Button(
             master=self, text="Save angles", command=self._saveAngles)
-        btn_update.grid(row=2, columnspan=2, pady=5)
+        btn_update.grid(row=3, columnspan=2, pady=5)
 
     def _saveAngles(self):
         # Leave change pen angle command
@@ -96,7 +99,7 @@ class TunePenFrame(tk.Frame):
         '''
         Start the manual control runtime mode
         '''
-        print("Focus in on tune pen frame")
+        print("Focus in on settings frame")
         self._serial.writeByte(Commands.CHANGE_PEN_ANGLE)
         time.sleep(0.1)
         self._serial.readStr()
@@ -105,20 +108,50 @@ class TunePenFrame(tk.Frame):
         '''
         End the manual control runtime mode
         '''
-        print("Focus out on tune pen frame")
+        print("Focus out on settings frame")
         self._serial.writeByte(0xFF)
         time.sleep(0.1)
         self._serial.readStr()
+
+# class StepperDelayFrame(tk.Frame):
+#     DEFAULT_DELAY =  
+
+#     def __init__(self, master: tk.Misc, sp: SerialPort):
+#         super().__init__(master=master)
+#         self._serial = sp
+#         self._render()
+
+#     def _render(self):
+#         title = tk.Label(master=self, text="Tune Pen", font='Helvetica 12 bold')
+#         title.pack(pady=5)
+
+#         entry = tk.Entry(master=self, width=5, textvariable=)
+
+#         btn_update = tk.Button(
+#             master=self, text="Update delay", command=self._saveAngles)
+#         btn_update.pack(pady=5)
+
+class SettingsFrame(tk.Frame):
+    def __init__(self, master: tk.Misc, sp: SerialPort):
+        super().__init__(master=master)
+        self._serial = sp
+        self._render()
+    
+    def _render(self):
+        tune_pen_frame = TunePenFrame(master=self, sp=self._serial)
+        tune_pen_frame.grid(row=0, column=0)
+
+
 
 ################################################################################
 
 if __name__ == "__main__":
     root = tk.Tk()  # Create root window
-    root.title("Tune Pen Frame")  # Set window title
+    root.title("Settings Frame")  # Set window title
     sp = SerialPort()  # Initialize serial port
-    tunePenFrame = TunePenFrame(root, sp)  # Create frame
-    tunePenFrame.pack()  # Add the frame to the root window
-    tunePenFrame.focus_set()
+    SettingsFrame = SettingsFrame(root, sp)  # Create frame
+    SettingsFrame.pack()  # Add the frame to the root window
+    SettingsFrame.focus_set()
     sp.awaitResponse()
 
     root.mainloop()

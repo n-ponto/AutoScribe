@@ -1,8 +1,8 @@
 import serial
 import sys, os, time
-from struct import *
+import struct
 sys.path.append(os.path.dirname(__file__ ) + "/..")
-from Tools.ConsoleColors import ConsoleColors as cc
+from Tools.Encodings import ConsoleColors as cc
 
 class SerialPort():
 
@@ -45,18 +45,23 @@ class SerialPort():
         assert(type(x) == int)
         assert(0 <= x <= 255)
         if prt: print("writing:", hex(x))
-        self._port.write(pack("B", x))
+        self._port.write(struct.pack("B", x))
 
     def writeShort(self, x: int, prt=False):
         assert(type(x) == int)
         assert(0 <= x <= 65535)
         if prt: print("writing:", hex(x))
-        self._port.write(pack("H", x))
+        self._port.write(struct.pack("H", x))
 
     def writePoint(self, x:int, y:int, prt=False):
         assert(type(x)==int and type(y)==int)
         if prt: print("writing: (", x, ",", y, ")")
-        self._port.write(pack("HH", x, y))
+        try:
+            self._port.write(struct.pack("HH", x, y))
+        except Exception as e:
+            print(e)
+            print(f"({x}, {y})")
+            exit()
 
     def flushTxBuffer(self):
         self._port.reset_output_buffer()

@@ -85,7 +85,7 @@ void colorPixel() {
     int16_t x, y;
     x = currentPoint.x;
     y = IMAGE_HEIGHT - currentPoint.y;
-    assert(0 <= currentPoint.x && currentPoint.x <= IMAGE_WIDTH, "x outside bounds");
+    assert(0 <= x && x <= IMAGE_WIDTH, "x outside bounds");
     assert(0 <= y && y <= IMAGE_HEIGHT, "y outside bounds");
 
     penStateUp ? colorMove(x, y) : colorDraw(x, y);
@@ -129,6 +129,8 @@ size_t _Serial::write(uint8_t val) {
 }
 
 // Keeps track of the digital write calls and the
+bool halfStepping = false;
+bool halfStepped = false;
 void digitalWrite(uint8_t pin, uint8_t val) {
     // Track digital write calls
     struct pin *p;
@@ -145,6 +147,11 @@ void digitalWrite(uint8_t pin, uint8_t val) {
             p = &DigitalWriteCalls.top.stp;
             if (val)  // If write high (don't color again on write low)
             {
+                // if (halfStepping && halfStepped) {
+                //     halfStepped = false;
+                //     break;
+                // }
+                // halfStepped = true;
                 currentPoint.x += xMovingCW ? 1 : -1;  // Change point location
                 colorPixel();                          // Color the point
             }
@@ -152,12 +159,21 @@ void digitalWrite(uint8_t pin, uint8_t val) {
         case (BOT_STP_PIN):
             p = &DigitalWriteCalls.bot.stp;
             if (val) {
+                // if (halfStepping && halfStepped) {
+                //     halfStepped = false;
+                //     break;
+                // }
+                // halfStepped = true;
                 currentPoint.y += yMovingCW ? -1 : +1;
                 colorPixel();
             }
             break;
         case (ENABLE_PIN):
             p = &DigitalWriteCalls.enable;
+            break;
+        case (HALF_STEP_PIN):
+            halfStepping = val;
+            halfStepped = false;
             break;
         default:
             std::cout << "[ERROR]: called with unexpected pin " << pin << std::endl;
@@ -213,6 +229,6 @@ void delay(int) {
 void displayDrawing() {
 }
 
-void updateInstructionCountDisplay(int) {
+void updateInstructionCountDisplay(int, int) {
 
 }

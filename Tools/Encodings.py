@@ -16,11 +16,14 @@ class Commands:
     ENTER_MANUAL_CONTROL_MODE= 9
 
 # Special encodings for the drawing runtime mode
+# Make sure these constants line up with the values from 
+# the Arduino code header files
 class Drawing:
-    EMERGENCY_STOP = 0x7FFF  
-    MOVE_PEN =       (1 << 12)  # Should move the pen (down if PEN_UP == 0)
-    STOP_DRAWING =   (1 << 14)
-    FLAG_MASK = (0b1111 << 12)
+    BUFSZ = 0x100
+    EMERGENCY_STOP = 0x1FFF
+    MOVE_PEN =       (1 << 14)  # Should move the pen (down if PEN_UP == 0)
+    STOP_DRAWING =   (1 << 15)
+    FLAG_MASK = (0b11 << 14)
 
 # Special encodings for the manual control runtime mode
 class MCKeys:

@@ -1,5 +1,5 @@
-from NcodeParser import parse_ncode
-from Encodings import NCODE_MOVE
+from Tools.NcodeParser import parse_ncode
+from Tools.Encodings import NCODE_MOVE
 import os
 import sys
 import cv2
@@ -46,15 +46,11 @@ def coordinates_onto_image(coordinates: list, img: np.ndarray, color = COLOR_DRA
     return prev_point
 
 
-def vizualize_ncode(ncode_file: str, save_path: str):
+def vizualize_ncode(ncode_file: str):
     # Open and read file
     coords: list = parse_ncode(ncode_file)
     img: np.ndarray = coordinates_to_image(coords)
-    # Save the image
-    if cv2.imwrite(save_path, img):
-        print(f"Saved image to: {save_path}")
-    else:
-        print("ERROR SAVING IMAGE")
+    return img
 
 
 def show_ncode(ncode_file: str):
@@ -87,4 +83,9 @@ if __name__ == '__main__':
         save_path = sys.argv[2]
 
     assert(save_path[-4:] == ".bmp"), f"Expected bmp file {save_path}"
-    vizualize_ncode(ncode, save_path)
+    img = vizualize_ncode(ncode)
+    # Save the image
+    if cv2.imwrite(save_path, img):
+        print(f"Saved image to: {save_path}")
+    else:
+        print("ERROR SAVING IMAGE")

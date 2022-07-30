@@ -114,8 +114,15 @@ void updateCoordinateDisplay(int16_t x, int16_t y) {
     clearCoord(y);
 }
 
-void updateInstructionCountDisplay(int count) {
+/*
+Displays the total number of coordinate pairs received, and the total
+count of executed coordinates.
+*/
+void updateInstructionCountDisplay(int total, int count) {
     lcd.setCursor(0, BOTTOM_ROW);
+    lcd.print(total);
+    clearCoord(total);
+    lcd.setCursor(FONT_WIDTH * 10, BOTTOM_ROW);
     lcd.print(count);
     clearCoord(count);
 }

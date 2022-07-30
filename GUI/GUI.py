@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(__file__) + "/..")
 from Tools.SerialPort import SerialPort
 # Import frames
 from Frames.ManualControlFrame import ManualControlFrame
-from Frames.TunePenFrame import TunePenFrame
+from Frames.SettingsFrame import SettingsFrame
 from Frames.DrawingFrame import DrawingFrame
 # Import tkinter libraries
 import tkinter as tk
@@ -19,11 +19,11 @@ tabControl = ttk.Notebook(root)
 
 serial = SerialPort()
 
-tab1 = TunePenFrame(tabControl, serial)
+tab1 = SettingsFrame(tabControl, serial)
 tab2 = ManualControlFrame(tabControl, serial)
 tab3 = DrawingFrame(tabControl, serial)
   
-tabControl.add(tab1, text ='Tune Pen')
+tabControl.add(tab1, text ='Settings')
 tabControl.add(tab2, text ='Manual Control')
 tabControl.add(tab3, text ='Drawing')
 tabControl.pack(expand = 1, fill ="both")

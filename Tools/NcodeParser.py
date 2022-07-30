@@ -1,7 +1,7 @@
 '''
 Takes an Ncode file and returns the list of coordinates
 '''
-from Encodings import NCODE_MOVE
+from Tools.Encodings import NCODE_MOVE
 
 def parse_ncode(ncode_file: str) -> list:
     '''
@@ -9,9 +9,8 @@ def parse_ncode(ncode_file: str) -> list:
     '''
     assert(ncode_file[-6:] == ".ncode"), f"Expected ncode file {ncode_file}"
     print("Parsing ncode file...")
-    file = open(ncode_file, 'r')
-    assert(file is not None), f"Couldn't open file {ncode_file}"
-    lines: list = file.readlines()
+    with open(ncode_file, 'r') as f:
+        lines: list = f.readlines()
     output: list = []
     for ln in lines:
         ln = ln.strip()

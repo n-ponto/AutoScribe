@@ -13,10 +13,12 @@
 
 #define HEX 16
 
+#define A0 1
+
 void setRuntimeMode(void (*fn)());
 void acceptingCommands();
 void displayDrawing();
-void updateInstructionCountDisplay(int);
+void updateInstructionCountDisplay(int, int);
 void delay(int);
 
 class Servo

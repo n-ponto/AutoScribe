@@ -27,6 +27,7 @@ void hardwareInit()
     pinMode(BOT_STP_PIN, OUTPUT);
     pinMode(BOT_DIR_PIN, OUTPUT);
     pinMode(ENABLE_PIN, OUTPUT);
+    pinMode(HALF_STEP_PIN, OUTPUT);
     digitalWrite(ENABLE_PIN, DISABLE_STEPPERS);
     // initialize the pen servo pin
     penUpAngle = DEFAULT_UP;

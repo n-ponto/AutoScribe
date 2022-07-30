@@ -10,6 +10,7 @@ Constants for hardware pins, constant values, and defaults
 #define BOT_STP_PIN 2 // Pin for stepping the bottom motor
 #define BOT_DIR_PIN 5 // Pin for changing the bottom motor direction
 #define ENABLE_PIN 8  // Pin to enable both motors
+#define HALF_STEP_PIN A0 // Pin to enable half stepping
 
 // Pen servo pin
 #define SERVO_PIN 10 // Pin for the servo motor holding the pen
@@ -32,7 +33,7 @@ Constants for hardware pins, constant values, and defaults
 // Defaults
 #define DEFAULT_UP 50              // Angle for when the pen is up off the paper
 #define DEFAULT_DOWN 70            // Angle when pen is down on the paper
-#define DEFAULT_STEPPER_DELAY 4000 // Microsecond delay between stepper pulses
+#define DEFAULT_STEPPER_DELAY 2000 // Microsecond delay between stepper pulses
 #define DEFAULT_PEN_DELAY 500      // Millisecond delay to pause while the pen goes up/down
 
 #endif //HARDWARE_H_
