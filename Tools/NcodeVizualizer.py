@@ -4,6 +4,7 @@ import os
 import sys
 import cv2
 import numpy as np
+import math
 
 # Color to make lines when the pen is moving (off the paper)
 COLOR_MOVE = (60, 60, 60)
@@ -46,9 +47,37 @@ def coordinates_onto_image(coordinates: list, img: np.ndarray, color = COLOR_DRA
     return prev_point
 
 
+def unrotate_points(coordinates: list) -> list:
+    '''
+    Unrotates all the coordinates in the list by 45 degrees since ncode files 
+    are saved at a 45 degree angle to compensate for hardware. 
+    '''
+    new_coordinates = []
+    for element in coordinates:
+        if type(element) == str:
+            assert(element == NCODE_MOVE)
+            new_coordinates.append(element)
+        elif type(element) == tuple:
+            x, y = element
+            length = math.sqrt(x**2 + y**2)
+            if x == 0:
+                angle = math.radians(90)
+            elif x < 0:
+                angle = math.radians(180) + math.atan(y/x)
+            else:
+                angle = math.atan(y/x)
+            new_angle = angle - math.radians(45)
+            new_x = length * math.cos(new_angle)
+            new_y = length * math.sin(new_angle)
+            new_coordinates.append((new_x, new_y))
+        else:
+            print("[WARNING] Unexpected type while translating to " +
+                  f"ncode: {type(element)} {element}")
+    return new_coordinates
+
 def vizualize_ncode(ncode_file: str):
     # Open and read file
-    coords: list = parse_ncode(ncode_file)
+    coords: list = unrotate_points(parse_ncode(ncode_file))
     img: np.ndarray = coordinates_to_image(coords)
     return img
 
@@ -58,34 +87,6 @@ def show_ncode(ncode_file: str):
     Vizualizes the ncode then opens a new window showing the image
     '''
     img = vizualize_ncode(ncode_file)
-    name = os.path.basename(ncode_file)
+    name = os.path.basename(ncode_file)[:-6]
     cv2.imshow(name, img)
     cv2.waitKey(0)
-
-
-if __name__ == '__main__':
-    '''
-    Takes a ncode file as an argument and saves an image of the intended output
-    '''
-
-    # Check correct arguments
-    if (len(sys.argv) < 2):
-        print('Usage: python svg_parser.py path\\to\\file.svg path\\to\\save.ncode')
-        exit()
-
-    ncode: str = sys.argv[1]
-
-    if (len(sys.argv) < 3):
-        # Only provided svg file
-        save_path = ncode[:-6] + ".bmp"
-        print(f"[SAVE PATH]: {save_path}")
-    else:
-        save_path = sys.argv[2]
-
-    assert(save_path[-4:] == ".bmp"), f"Expected bmp file {save_path}"
-    img = vizualize_ncode(ncode)
-    # Save the image
-    if cv2.imwrite(save_path, img):
-        print(f"Saved image to: {save_path}")
-    else:
-        print("ERROR SAVING IMAGE")

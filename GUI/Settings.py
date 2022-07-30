@@ -35,12 +35,12 @@ def Settings(master: tk.Misc, serial: SerialPort) -> tk.Frame:
     lbl_penangle = tk.Label(master=frame, text="Pen Angle")
     lbl_penangle.grid(row=n, columnspan=2, sticky="ew", pady=(5, 0))
     n+=1
-    lbl_up = tk.Label(master=frame, text="Up angle: ")
+    lbl_up = tk.Label(master=frame, text="Up height: ")
     ent_up =  tk.Entry(master=frame, width=5, textvariable=tk.StringVar(frame, penUp))
     lbl_up.grid(row=n, column=0)
     ent_up.grid(row=n, column=1)
     n+=1
-    lbl_down = tk.Label(master=frame, text="Down angle: ")
+    lbl_down = tk.Label(master=frame, text="Down height: ")
     ent_down =  tk.Entry(master=frame, width=5, textvariable=tk.StringVar(frame, penDown))
     lbl_down.grid(row=n, column=0)
     ent_down.grid(row=n, column=1)

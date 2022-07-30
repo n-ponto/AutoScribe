@@ -3,6 +3,7 @@ import sys
 import os
 import tkinter as tk
 from tkinter import filedialog as fd
+from Data import DataObject
 # Import Serial Port and Encodings
 sys.path.append(os.path.dirname(__file__) + "/../..")
 from Tools.SerialPort import SerialPort
@@ -22,10 +23,11 @@ class DrawingFrame(tk.Frame):
     _btn_viz: tk.Button
     
 
-    def __init__(self, master: tk.Misc, sp: SerialPort):
+    def __init__(self, master: tk.Misc, sp: SerialPort, dataObject: DataObject):
         super().__init__(master=master)
         self._serial = sp
         self._sender = NcodeSender(sp)
+        self._dataObject = dataObject
         self._render()
 
     def _render(self):
@@ -49,7 +51,7 @@ class DrawingFrame(tk.Frame):
 
         path = fd.askopenfilename(
             title='Open a file',
-            initialdir='./',
+            initialdir=self._dataObject.WorkingDirectory,
             filetypes=filetypes)
 
         #TODO: check that the file is valid?
@@ -60,6 +62,7 @@ class DrawingFrame(tk.Frame):
         self._lbl_file.config(text=self._filename)
         self._btn_send['state'] = 'normal'
         self._btn_viz['state'] = 'normal'
+        self._dataObject.WorkingDirectory = os.path.dirname(path)
 
     def _vizualize(self):
         show_ncode(self._filename)

@@ -8,10 +8,10 @@ import struct
 from Tools.Encodings import Commands, Drawing, NCODE_MOVE
 from Tools.SerialPort import SerialPort
 
-XMIN = -800
-XMAX = 800
-YMIN = -800
-YMAX = 800
+XMIN = -1200
+XMAX = 1200
+YMIN = -1200
+YMAX = 1200
 
 # Set up logging
 import logging, os
@@ -123,10 +123,10 @@ class NcodeSender:
                     print(f"was {len(coords)} spaces")
                 # x = struct.pack("h", int(coords[0]))
                 x = int(coords[0])
-                assert(XMIN <= x and x <= XMAX)
+                assert(XMIN <= x and x <= XMAX), f"got invalid x value: {x}"
                 # y = struct.pack('h', int(coords[0]))
                 y = int(coords[1])
-                assert(YMIN <= y and y <= YMAX)
+                assert(YMIN <= y and y <= YMAX), f'got invalid y value: {y}'
 
                 # Encode the x value
                 x &= 0x0000FFFF

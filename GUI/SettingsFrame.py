@@ -2,6 +2,7 @@ import time
 import sys
 import os
 import tkinter as tk
+from Data import DataObject
 # Import Serial Port and Encodings
 sys.path.append(os.path.dirname(__file__) + "/../..")
 from Tools.SerialPort import SerialPort
@@ -53,25 +54,26 @@ class TunePenFrame(tk.Frame):
     _ent_up: PenAngleEntry
     _ent_down: PenAngleEntry
 
-    def __init__(self, master: tk.Misc, sp: SerialPort):
+    def __init__(self, master: tk.Misc, sp: SerialPort, dataObject: DataObject):
         super().__init__(master=master)
         self.bind("<FocusIn>", self._focusIn)
         self.bind("<FocusOut>", self._focusOut)
         self.bind("<Return>", self._saveAngles)  # Save when enter pressed
         self._serial = sp
+        self._dataObject = dataObject
         self._render()
 
     def _render(self):
         title = tk.Label(master=self, text="Tune Pen", font='Helvetica 12 bold')
         title.grid(row=0, columnspan=2, pady=5)
 
-        lbl_up = tk.Label(master=self, text="Up angle: ")
-        self._ent_up = PenAngleEntry(self, self._serial, 50)
+        lbl_up = tk.Label(master=self, text="Up height: ")
+        self._ent_up = PenAngleEntry(self, self._serial, self._dataObject.PenUpHeight)
         lbl_up.grid(row=1, column=0)
         self._ent_up.grid(row=1, column=1)
 
-        lbl_down = tk.Label(master=self, text="Down angle: ")
-        self._ent_down = PenAngleEntry(self, self._serial, 70)
+        lbl_down = tk.Label(master=self, text="Down height: ")
+        self._ent_down = PenAngleEntry(self, self._serial, self._dataObject.PenDownHeight)
         lbl_down.grid(row=2, column=0)
         self._ent_down.grid(row=2, column=1)
         # Update button
@@ -94,6 +96,9 @@ class TunePenFrame(tk.Frame):
         self._serial.writeByte(Commands.CHANGE_PEN_ANGLE)
         time.sleep(0.1)
         self._serial.readStr()
+        # Save the new pen heights
+        self._dataObject.PenUpHeight = int(self._ent_up.get())
+        self._dataObject.PenDownHeight = int(self._ent_down.get())
 
     def _focusIn(self, event):
         '''
@@ -132,13 +137,14 @@ class TunePenFrame(tk.Frame):
 #         btn_update.pack(pady=5)
 
 class SettingsFrame(tk.Frame):
-    def __init__(self, master: tk.Misc, sp: SerialPort):
+    def __init__(self, master: tk.Misc, sp: SerialPort, dataObject: DataObject):
         super().__init__(master=master)
         self._serial = sp
+        self._dataObject = dataObject
         self._render()
     
     def _render(self):
-        tune_pen_frame = TunePenFrame(master=self, sp=self._serial)
+        tune_pen_frame = TunePenFrame(self, self._serial, self._dataObject )
         tune_pen_frame.grid(row=0, column=0)
 
 
