@@ -1,10 +1,10 @@
 '''
 Sends ncode to the device
 '''
+import os
+import logging
 import sys
 import time
-import math
-import struct
 from Tools.Encodings import Commands, Drawing, NCODE_MOVE
 from Tools.SerialPort import SerialPort
 
@@ -14,7 +14,6 @@ YMIN = -1200
 YMAX = 1200
 
 # Set up logging
-import logging, os
 logging_path = 'svg_parser.log'
 if os.path.exists(logging_path):
     os.remove(logging_path)
@@ -42,8 +41,9 @@ class NcodeSender:
             return False
 
         # Start drawing mode
+        self._serial.flushRxBuffer()
         self._serial.writeByte(Commands.ENTER_DRAW_MODE)
-        time.sleep(0.2)
+        time.sleep(0.5)
         try:
             self._send_points(data)
         except KeyboardInterrupt:
@@ -59,6 +59,7 @@ class NcodeSender:
         return True
 
     def _send_points(self, data: list):
+        TX_DELAY = 0.01  # Time in seconds between sending points over serial
         i: int = 0
         # Start by completely filling the buffer
         print(f"Sending a total of {len(data)} coordinate pairs")
@@ -69,34 +70,35 @@ class NcodeSender:
             x, y = data[i]
             self._serial.writePoint(x, y)
             i += 1
+            time.sleep(TX_DELAY)
         # Batch the rest
         print(f"Done filling buffer i={i}")
         prev = i
         while i < len(data):
             # Wait for the low signal
             # print("Waiting for signal...")
-            timeout = time.time() + 5
+            timeout = time.time() + 30
             while self._serial.readByte() != 0xFF:
                 if time.time() > timeout:
                     self._serial.readStr()
                     print('TIMEOUT')
                     self._serial.writePoint(Drawing.STOP_DRAWING, 0)
                     return
-                time.sleep(.2)
             # Fill the buffer again
-            # print("Received signal, sending more bytes")
+            self._serial.flushRxBuffer()
             while i < len(data) and i < prev+RX_SZ:
                 x, y = data[i]
                 logger.debug(f"{x}, {y}")
                 self._serial.writePoint(x, y)
                 i += 1
+                time.sleep(TX_DELAY)
             print(f"Done sending more bytes, {i} total")
             prev = i
         # Finally send end signal
         print('Done sending all coordinates')
+        self._serial.flushRxBuffer()
+        time.sleep(0.2)
         self._serial.writePoint(Drawing.STOP_DRAWING, 0)
-
-
 
     @staticmethod
     def _parseFile(filepath: str) -> list:

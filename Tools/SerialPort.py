@@ -8,7 +8,7 @@ class SerialPort():
 
     _port: serial.Serial
 
-    def __init__(self, port='COM3', baudrate=9600, timeout=.1) -> None:
+    def __init__(self, port='COM3', baudrate=9600, timeout=1) -> None:
         self._port = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
         self.buffer_size = 12800
         self._port.set_buffer_size(rx_size = self.buffer_size, tx_size=self.buffer_size)
@@ -65,6 +65,9 @@ class SerialPort():
 
     def flushTxBuffer(self):
         self._port.reset_output_buffer()
+
+    def flushRxBuffer(self):
+        self._port.reset_input_buffer()
 
 if __name__=='__main__':
     sp = SerialPort()

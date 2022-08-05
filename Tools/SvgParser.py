@@ -10,11 +10,11 @@ import enum
 import math
 from svg.path import parse_path
 from svg.path.path import Line, Arc, QuadraticBezier, CubicBezier, Move, Close
+from SimplifySegments import simplify_segments
 sys.path.append(os.path.dirname(__file__) + "/..")
 from NcodeVizualizer import coordinates_onto_image
 from Encodings import NCODE_MOVE
 
-# TODO: add logic for transforms, practice on ../images.snail.svg
 
 # Set up logging
 logging_path = 'svg_parser.log'
@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(message)s',
                     filename=logging_path, encoding='utf-8')
+
 
 class VizMode(enum.Enum):
     '''
@@ -37,7 +38,8 @@ class VizMode(enum.Enum):
 class VizualizationAid:
     '''
     Class to help with vizualizing parts of the SVG in different colors
-    Stores the entire image and rotates through colors
+    Stores the entire image and rotates through colors each time a new part 
+    is vizualized (drawn onto the canvas)
     '''
 
     # Colors to use when vizualizing parts of the SVG in different colors
@@ -57,6 +59,8 @@ class VizualizationAid:
         self.viz_mode = viz_mode
 
     def viz_component(self, coords: list):
+        ''' Draws the set of coordinates onto the canvas in a new color
+        '''
         color_str, color_bgr = self.VIZ_COLORS[self._color_idx]
         logger.debug(f"\tcolor: {color_str}")
         self._prev_coord = coordinates_onto_image(
@@ -99,7 +103,7 @@ def get_bezier_points(points: list):
     curve = bezier.Curve(nodes, degree=degree)
     # Figure out how many points we want along the curve
     # Want fewest points possible to represent all pixels in the curve
-    diffs = np.sum(np.diff(nodes, axis=1), axis=1)
+    diffs = np.sum(np.absolute(np.diff(nodes, axis=1)), axis=1)
     logger.debug(f"\tdiffs {diffs}")
     count = round(np.min(diffs))  # max x/y change
     logger.debug(f"\tcount {count}")
@@ -123,28 +127,34 @@ def get_bezier_points(points: list):
     logger.debug("\t" + "*" * 40)
     return output
 
-def path_to_coordinates(path_string: list, va: VizualizationAid = None) -> list:
+
+def path_to_segments(path_string: list, va: VizualizationAid = None) -> list:
     '''
     Takes the string format of the SVG path object
-    Returns a list of ncode commands for that path, or None on failure
+    Returns a list of the continous line segments, where each segment is a 
+    list of points in that segment
     '''
     path = parse_path(path_string)
     vizualizing: bool = va is not None and va.viz_mode == VizMode.PARTS
-    output = []
+    output_segments = []
     prev = None
     prev_viz = 0
+    current_segment = []
     for part in path:
         if isinstance(part, Move):
-            output.append(NCODE_MOVE)
+            if len(current_segment) > 0:
+                prev_viz = 0
+                output_segments.append(current_segment)
+                current_segment = []
             prev = (part.end.real, part.end.imag)
-            output.append((part.end.real, part.end.imag))
+            current_segment.append((part.end.real, part.end.imag))
         elif isinstance(part, Line):
             assert(prev[0] == part.start.real)
             assert(prev[1] == part.start.imag)
             prev = (part.end.real, part.end.imag)
-            output.append(prev)
+            current_segment.append(prev)
         elif isinstance(part, Arc):
-            pass
+            assert(False), "Have not created code for this yet"
         elif isinstance(part, QuadraticBezier):
             assert(prev[0] == part.start.real)
             assert(prev[1] == part.start.imag)
@@ -152,9 +162,8 @@ def path_to_coordinates(path_string: list, va: VizualizationAid = None) -> list:
             control = (part.control.real, part.control.imag)
             end = (part.end.real, part.end.imag)
             points = get_bezier_points([start, control, end])
-            if len(points) < 1:
-                print("less")
-            output.extend(points)
+            assert(len(points) > 1), "No points returned"
+            current_segment.extend(points)
             prev = points[-1]
         elif isinstance(part, CubicBezier):
             assert(prev[0] == part.start.real)
@@ -164,21 +173,26 @@ def path_to_coordinates(path_string: list, va: VizualizationAid = None) -> list:
             control2 = (part.control2.real, part.control2.imag)
             end = (part.end.real, part.end.imag)
             points = get_bezier_points([start, control1, control2, end])
-            output.extend(points)
+            current_segment.extend(points)
             prev = points[-1]
         elif isinstance(part, Close):
             assert(prev[0] == part.start.real)
             assert(prev[1] == part.start.imag)
             prev = (part.end.real, part.end.imag)
-            output.append(prev)
-        if vizualizing: va.viz_component(output[prev_viz:])
-        prev_viz = len(output)
-    return output
+            current_segment.append(prev)
+        if vizualizing:
+            va.viz_component(current_segment[prev_viz:])
+        prev_viz = len(current_segment)
+    if len(current_segment) > 0:
+        output_segments.append(current_segment)
+    return output_segments
 
-def svg_to_coordinates(filepath: str, va: VizualizationAid = None) -> list:
+
+def svg_to_segments(filepath: str, va: VizualizationAid = None) -> list:
     '''
-    Take a path to a svg file and parse out the coordinate endpoints
-    Returns a list of ncode coordinates
+    Take a path to a svg file and parse out the individual line segments
+    where each segment is a continous set of points without needing to pick up 
+    the pen
     '''
     doc: md.Document = get_svg_doc(filepath)
     if (doc is None):
@@ -187,25 +201,49 @@ def svg_to_coordinates(filepath: str, va: VizualizationAid = None) -> list:
     coordinate_strs: list = get_svg_paths(doc)
     doc.unlink()  # Clean up the not needed dom tree
 
-    output = []  # List for storing outpoint coordiantes
+    segments = []  # List for storing outpoint coordiantes
 
     print(f"Found {len(coordinate_strs)} different paths in the file")
     logger.debug(f"Found {len(coordinate_strs)} different paths in the file")
     viz_paths = va is not None and va.viz_mode == VizMode.PATHS
     for i, path_string in enumerate(coordinate_strs):
         logger.debug(f"Path #{i}")
-        path_list = path_to_coordinates(path_string, va)
-        if path_list is None:
+        path_segments = path_to_segments(path_string, va)
+        if path_segments is None:
             print("\t> path_to_coordinates returned none, path not appended")
         else:
             print("\t> path appended to list")
             if viz_paths:
-                va.viz_component(path_list)
-            output.extend(path_list)  # Add the path to the output list
-    # Return to origin at the end
-    output.append(NCODE_MOVE)
-    output.append((0, 0))
-    return output
+                path_coordinates = segments_to_coordinates(path_segments)
+                va.viz_component(path_coordinates)
+            segments.extend(path_segments)  # Add the path to the output list
+    return segments
+
+
+def segments_to_coordinates(segments: list) -> list:
+    ''' Takes a list of line segments and joins them into a single list of 
+    coordinates with move signals between segments.
+    Returns: a list of coordinates with move commands between segments
+    '''
+    output_coordinates = []
+    for seg in segments:
+        output_coordinates.append(NCODE_MOVE)
+        output_coordinates.extend(seg)
+    return output_coordinates
+
+
+def svg_to_coordinates(filepath: str, va: VizualizationAid = None) -> list:
+    '''
+    Takes the path to a svg file and parses out the coordinates
+    Returns a list of ncode coordinates with move commands between
+    '''
+    segments = svg_to_segments(filepath, va)
+    segments = simplify_segments(segments, 5)
+    coordinates = segments_to_coordinates(segments)
+    # Return to the orgin after drawing
+    coordinates.append(NCODE_MOVE)
+    coordinates.append((0, 0))
+    return coordinates
 
 
 def rotate_points(coordinates: list) -> list:
@@ -270,7 +308,7 @@ def viz_svg(svg_path: str, viz_mode=VizMode.WHOLE):
     '''
     VIZ_SAVE_PATH = "viz_svg.bmp"
     va = VizualizationAid(viz_mode)
-    coords = rotate_points(svg_to_coordinates(svg_path, va))
+    coords = svg_to_coordinates(svg_path, va)
     if va.viz_mode == VizMode.WHOLE:
         va.viz_component(coords)
     # Save the image

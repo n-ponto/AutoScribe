@@ -7,7 +7,6 @@ from Tools.NcodeVizualizer import show_ncode
 '''
 Takes a ncode file as an argument and saves an image of the intended output
 '''
-sys.argv.append('./images/rose.ncode')
 
 # Check correct arguments
 if (len(sys.argv) < 2):
@@ -23,7 +22,8 @@ if (len(sys.argv) < 3):
 else:
     save_path = sys.argv[2]
 
-assert(save_path[-4:] == ".bmp"), f"Expected bmp file {save_path}"
+if save_path[-4:] != ".bmp":
+    print(f"[ERROR] save path should be to .bmp file, not: {save_path}")
 img = show_ncode(ncode)
 # # Save the image
 # if cv2.imwrite(save_path, img):

@@ -43,6 +43,9 @@ class DrawingFrame(tk.Frame):
         self._btn_send = tk.Button(self, text="Send Ncode", command=self._send, state='disabled')
         self._btn_send.pack(padx=5, pady=5)
 
+        self._btn_cancel = tk.Button(self, text="Cancel", command=self._cancel, state='disabled')
+        self._btn_cancel.pack(padx=5, pady=5)
+
     def _selectFile(self):
         filetypes = (
             ('ncode files', '*.ncode'),
@@ -71,6 +74,17 @@ class DrawingFrame(tk.Frame):
         #TODO: check file is valid again?
         print(f"Sending file {self._filename}")
         self._sender.send(self._filename)
+        self._btn_cancel['state'] = 'normal'
+    
+    def _cancel(self):
+        self._serial.readStr()
+        # Send emergency stop signal
+        print("Cancelling the drawing process...")
+        self._serial.flushTxBuffer()
+        self._serial.writePoint(Drawing.EMERGENCY_STOP, 0)
+        time.sleep(0.2)
+        self._serial.readStr()
+        print("Cancelled")
 
 
 if __name__ == "__main__":

@@ -7,7 +7,6 @@ out
 test.py
 *\__pycache__
 
-*.ncode
 *.log
 
 # Makefile

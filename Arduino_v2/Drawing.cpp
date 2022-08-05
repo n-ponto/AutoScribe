@@ -231,12 +231,14 @@ void drawingLoop() {
     Point read, change;
     read = {0, 0};
     uint16_t flags;
-    // bool checkQueue = false;
     int instructionCount = 0;
     uint8_t loopCount = 0;
-    // uint16_t half_full = BUFSZ>>1;
-    // uint16_t quar_full = BUFSZ>>2;
-    uint8_t buf_space = 0;
+
+    /* buf_space indicates how many points can fit into the RX buffer. The UNO
+    has a RX buffer size of 64 bytes or 16 points. Assuming the computer starts
+    by sending 16 bytes it's assumed there's no space in the buffer. As each
+    point is read from the buffer, the buf_space increases by 1. */
+    uint8_t buf_space = 0;  
     while (continueDrawing) {
         if (++loopCount == 0)
             updateInstructionCountDisplay(instructionCount, queue.curSz);
@@ -250,28 +252,22 @@ void drawingLoop() {
             continue;
         }
 
-        // Send signal when space for more points
+        /* Once the entire RX buffer has been read and there's space in the queue
+        for another RX buffer worth of points, then send the signal to transmit
+        more points and reset the space in the buffer. */
         if (buf_space >= 64 / POINTSZ && BUFSZ > queue.curSz + 64 / POINTSZ) {
             buf_space = 0;
             Serial.write(0xFF);
         }
-        // if (!checkQueue && queue.curSz >= half_full) {  // Half of buffer size
-        //     checkQueue = true;
-        //     // Serial.println("It's over half.");
-        // } else if (checkQueue && queue.curSz < quar_full) {  // Less than a quarter full
-        //     Serial.write(0xFF);
-        //     displayInit();
-        //     Serial.println("This is the signal.");
-        //     checkQueue = false;
-        // }
 
-        // Wait for a point on serial
+        // While waiting for another point retransmit the send signal.
         if (Serial.available() < POINTSZ)
             continue;
 
         Serial.readBytes((char *)&read, POINTSZ);
         buf_space++;
         if (read.x == EMERGENCY_STOP) {
+            // Leave the execution loop when receive the emergency stop command
             break;
         }
 
