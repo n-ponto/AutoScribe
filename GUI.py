@@ -1,3 +1,4 @@
+from asyncio import DatagramProtocol
 from Tools import SerialPort
 from GUI import ManualControlFrame, SettingsFrame, DrawingFrame
 from GUI.Data import DataObject, tryLoadData, saveData
@@ -23,6 +24,8 @@ tabControl.add(tab3, text='Drawing')
 tabControl.pack(expand=1, fill="both")
 
 serial.awaitResponse()
+dataObject.initSettingsOnArduino(serial)
+
 root.mainloop()
 
 print("Saving settings")
