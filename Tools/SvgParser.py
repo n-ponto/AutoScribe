@@ -10,10 +10,9 @@ import enum
 import math
 from svg.path import parse_path
 from svg.path.path import Line, Arc, QuadraticBezier, CubicBezier, Move, Close
-from SimplifySegments import simplify_segments
-sys.path.append(os.path.dirname(__file__) + "/..")
-from NcodeVizualizer import coordinates_onto_image
-from Encodings import NCODE_MOVE
+from .SimplifySegments import simplify_segments
+from .NcodeVizualizer import coordinates_onto_image
+from .Encodings import NCODE_MOVE
 
 
 # Set up logging
@@ -304,54 +303,15 @@ def svg_to_ncode(svg_path: str, save_path: str):
     file.close()
 
 
-def viz_svg(svg_path: str, viz_mode=VizMode.WHOLE):
+def viz_svg(svg_path: str, viz_mode=VizMode.WHOLE) -> np.ndarray:
     '''
-    Takes the path to a SVG file and saves an image showing the parsed output
+    Takes the path to a SVG file and returns an image showing the parsed output
     '''
-    VIZ_SAVE_PATH = "viz_svg.bmp"
     va = VizualizationAid(viz_mode)
     coords = svg_to_coordinates(svg_path, va)
     if va.viz_mode == VizMode.WHOLE:
         va.viz_component(coords)
-    # Save the image
-    if cv2.imwrite(VIZ_SAVE_PATH, va.img):
-        print(f"Saved image to: {os.path.join('./', VIZ_SAVE_PATH)}")
-    else:
-        print("ERROR SAVING IMAGE")
-
-
-if __name__ == '__main__':
-    '''
-    Takes a SVG file as an argument and parse out the lines to draw
-    Either input a save path for the ncode, or just "viz" to save an image
-    '''
-    # Check correct arguments
-    if (len(sys.argv) < 2):
-        print('Usage: python svg_parser.py path\\to\\file.svg path\\to\\save.ncode')
-        exit()
-
-    svg_path: str = sys.argv[1]
-    assert(svg_path[-4:].lower() == ".svg")
-
-    # No save path
-    if (len(sys.argv) < 3):
-        save_path = svg_path[:-4] + ".ncode"
-        print(f"[SAVE PATH]: {save_path}")
-        svg_to_ncode(svg_path, save_path)
-    # Save path provided
-    elif sys.argv[2].strip()[:-4].lower() == ".ncode":
-        svg_to_ncode(svg_path, sys.argv[2])
-    # Vizualize whole document
-    elif sys.argv[2].strip().lower() == "vizwhole":
-        viz_svg(svg_path, VizMode.WHOLE)
-    # Vizualize seperate paths
-    elif sys.argv[2].strip().lower() == 'vizpaths':
-        viz_svg(svg_path, VizMode.PATHS)
-    # Vizualize seperate parts
-    elif sys.argv[2].strip().lower() == 'vizparts':
-        viz_svg(svg_path, VizMode.PARTS)
-    else:
-        print(f"[ERROR] couldn't interpret 2nd argument {sys.argv[2]}")
+    return va.img
 
 
 '''

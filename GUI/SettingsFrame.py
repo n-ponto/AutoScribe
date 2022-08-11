@@ -1,16 +1,11 @@
 import time
-import sys
-import os
 import tkinter as tk
-from Data import DataObject
-# Import Serial Port and Encodings
-sys.path.append(os.path.dirname(__file__) + "/../..")
-from Tools.SerialPort import SerialPort
+from .Data import DataObject
+from Tools import SerialPort
 from Tools.Encodings import *
 
 MIN_ANGLE = 20
 MAX_ANGLE = 140
-
 
 class PenAngleEntry(tk.Entry):
 
@@ -64,16 +59,19 @@ class TunePenFrame(tk.Frame):
         self._render()
 
     def _render(self):
-        title = tk.Label(master=self, text="Tune Pen", font='Helvetica 12 bold')
+        title = tk.Label(master=self, text="Tune Pen",
+                         font='Helvetica 12 bold')
         title.grid(row=0, columnspan=2, pady=5)
 
         lbl_up = tk.Label(master=self, text="Up height: ")
-        self._ent_up = PenAngleEntry(self, self._serial, self._dataObject.PenUpHeight)
+        self._ent_up = PenAngleEntry(
+            self, self._serial, self._dataObject.PenUpHeight)
         lbl_up.grid(row=1, column=0)
         self._ent_up.grid(row=1, column=1)
 
         lbl_down = tk.Label(master=self, text="Down height: ")
-        self._ent_down = PenAngleEntry(self, self._serial, self._dataObject.PenDownHeight)
+        self._ent_down = PenAngleEntry(
+            self, self._serial, self._dataObject.PenDownHeight)
         lbl_down.grid(row=2, column=0)
         self._ent_down.grid(row=2, column=1)
         # Update button
@@ -119,7 +117,7 @@ class TunePenFrame(tk.Frame):
         self._serial.readStr()
 
 # class StepperDelayFrame(tk.Frame):
-#     DEFAULT_DELAY =  
+#     DEFAULT_DELAY =
 
 #     def __init__(self, master: tk.Misc, sp: SerialPort):
 #         super().__init__(master=master)
@@ -136,21 +134,20 @@ class TunePenFrame(tk.Frame):
 #             master=self, text="Update delay", command=self._saveAngles)
 #         btn_update.pack(pady=5)
 
+
 class SettingsFrame(tk.Frame):
     def __init__(self, master: tk.Misc, sp: SerialPort, dataObject: DataObject):
         super().__init__(master=master)
         self._serial = sp
         self._dataObject = dataObject
         self._render()
-    
+
     def _render(self):
-        tune_pen_frame = TunePenFrame(self, self._serial, self._dataObject )
+        tune_pen_frame = TunePenFrame(self, self._serial, self._dataObject)
         tune_pen_frame.grid(row=0, column=0)
 
 
-
 ################################################################################
-
 if __name__ == "__main__":
     root = tk.Tk()  # Create root window
     root.title("Settings Frame")  # Set window title

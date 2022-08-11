@@ -13,16 +13,6 @@ XMAX = 1200
 YMIN = -1200
 YMAX = 1200
 
-# Set up logging
-logging_path = 'svg_parser.log'
-if os.path.exists(logging_path):
-    os.remove(logging_path)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logging.basicConfig(format='%(message)s',
-                    filename=logging_path, encoding='utf-8')
-
-
 class NcodeSender:
 
     _serial: SerialPort
@@ -88,7 +78,6 @@ class NcodeSender:
             self._serial.flushRxBuffer()
             while i < len(data) and i < prev+RX_SZ:
                 x, y = data[i]
-                logger.debug(f"{x}, {y}")
                 self._serial.writePoint(x, y)
                 i += 1
                 time.sleep(TX_DELAY)

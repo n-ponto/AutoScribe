@@ -82,7 +82,7 @@ def vizualize_ncode(ncode_file: str):
     return img
 
 
-def show_ncode(ncode_file: str):
+def show_ncode(ncode_file: str) -> None:
     '''
     Vizualizes the ncode then opens a new window showing the image
     '''

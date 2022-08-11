@@ -4,9 +4,8 @@ import os
 import tkinter as tk
 from tkinter.constants import DISABLED
 # Import Serial Port and Encodings
-sys.path.append(os.path.dirname(__file__) + "/../..")
+from Tools import SerialPort
 from Tools.Encodings import *
-from Tools.SerialPort import SerialPort
 
 # Macros for accessing the directions dictionary
 PRESS = 0
