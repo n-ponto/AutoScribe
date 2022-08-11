@@ -47,19 +47,6 @@ void changePenAngle()
     return;
 }
 
-void moveToCoordinate()
-{
-    // Read two sets of 2 byte values, one each for the x and y axes
-    // Immediately move to that location
-    return;
-}
-
-void resetHome()
-{
-    // Reset the current recorded position to the origin (0, 0)
-    return;
-}
-
 void enterDrawMode()
 {
     // Set the runtime mode to drawing to be called from the main loop

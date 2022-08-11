@@ -9,8 +9,6 @@
 // Command                  Index   Encoding
 void setPenRange();         // 0    0000 0000
 void changePenAngle();      // 1    0000 0001
-void moveToCoordinate();    // 2    0000 0010
-void resetHome();           // 3    0000 0011
 void setStepperDelay();     // 4    0000 0100
 // Weird gap is so we can check the 8 bit to see if  
 // we should switch out of accepting commands
@@ -20,8 +18,8 @@ void enterManualControlMode(); // 9    0000 1001
 void (*functions[])() = {
     setPenRange,            // 0
     changePenAngle,         // 1
-    moveToCoordinate,       // 2
-    resetHome,              // 3
+    0,                      // 2
+    0,                      // 3
     setStepperDelay,        // 4
     0, 0, 0,                // 5-7
     enterDrawMode,          // 8
