@@ -6,7 +6,6 @@ Contains all code specific to the Drawing runtime mode.
 #include <Servo.h>
 #include <TimerTwo.h>
 
-#include "Display.h"
 #include "RuntimeModes.h"
 #else
 extern int drawLoopCounter;
@@ -210,7 +209,6 @@ void startDrawing() {
     penUp = true;
     Timer2.attachInterrupt(drawingInterrupt);  // Set interrupt function
     Timer2.start();                            // Start the timer interrupt
-    displayDrawing();                          // Show the drawing screen
 }
 
 // Clean up when drawing mode ends
@@ -232,7 +230,6 @@ void drawingLoop() {
     read = {0, 0};
     uint16_t flags;
     int instructionCount = 0;
-    uint8_t loopCount = 0;
 
     /* buf_space indicates how many points can fit into the RX buffer. The UNO
     has a RX buffer size of 64 bytes or 16 points. Assuming the computer starts
@@ -240,8 +237,6 @@ void drawingLoop() {
     point is read from the buffer, the buf_space increases by 1. */
     uint8_t buf_space = 0;  
     while (continueDrawing) {
-        if (++loopCount == 0)
-            updateInstructionCountDisplay(instructionCount, queue.curSz);
 
         if (isFull(&queue)) {
 #ifdef TESTING

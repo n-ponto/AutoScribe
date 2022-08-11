@@ -10,7 +10,6 @@ Contains:
 #include <Servo.h>
 #include "Hardware.h"
 #include "RuntimeModes.h"
-#include "Display.h"
 
 void (*runtime_mode)(void); // The current runtime mode
 
@@ -43,7 +42,6 @@ void setup()
     Timer2.init(stepperDelay, NULL);
     runtime_mode = acceptingCommands;
     hardwareInit();
-    displayInit();
 }
 
 // Always reading and buffering instructions from serial

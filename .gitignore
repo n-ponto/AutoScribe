@@ -9,6 +9,8 @@ test.py
 
 *.log
 
+*.pkl
+
 # Makefile
 *.exe
 *.o
@@ -16,6 +18,8 @@ test.py
 # Images
 *.bmp
 *.jpg
+*.svg
+*.png
 
 # 3D Printing Models
 *.stl

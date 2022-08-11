@@ -4,7 +4,6 @@ Contains all code specific to the Manual Control runtime mode.
 #include <Servo.h>
 #include <TimerTwo.h>
 
-#include "Display.h"
 #include "Hardware.h"
 #include "RuntimeModes.h"
 
@@ -60,7 +59,6 @@ void startManualControl() {
     penServo.write(penUpAngle);                 // Move the pen up
     Timer2.attachInterrupt(manualControlInterrupt);
     Timer2.start();
-    displayManualControl();
 }
 
 void endManualControl() {
@@ -131,7 +129,6 @@ void manualControl() {
                 mcState.stepx = false;
                 break;
         }
-        updateCoordinateDisplay(mcState.x, mcState.y);
     }
     endManualControl();
 }

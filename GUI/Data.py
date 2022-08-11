@@ -1,7 +1,7 @@
 import os
 import pickle
 
-DATA_FILE_NAME = "settings.obj"
+DATA_FILE_NAME = "settings.pkl"
 DATA_FILE_PATH =  os.path.join(os.path.dirname(os.path.realpath(__file__)), DATA_FILE_NAME)
 class DataObject:
 

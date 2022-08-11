@@ -125,6 +125,7 @@ def get_bezier_points(points: list):
     logger.debug(f"\toutput size {len(output)}")
     logger.debug(f"\toutput {output}")
     logger.debug("\t" + "*" * 40)
+    output[-1] = points[-1]
     return output
 
 
@@ -166,13 +167,14 @@ def path_to_segments(path_string: list, va: VizualizationAid = None) -> list:
             current_segment.extend(points)
             prev = points[-1]
         elif isinstance(part, CubicBezier):
-            assert(prev[0] == part.start.real)
-            assert(prev[1] == part.start.imag)
+            assert(prev[0] == part.start.real and prev[1] == part.start.imag), \
+                f"prev {prev}\t{part.start.real}, {part.start.imag}"
             start = (part.start.real, part.start.imag)
             control1 = (part.control1.real, part.control1.imag)
             control2 = (part.control2.real, part.control2.imag)
             end = (part.end.real, part.end.imag)
             points = get_bezier_points([start, control1, control2, end])
+            assert(points[-1] == end), f"{points}\n{end}"
             current_segment.extend(points)
             prev = points[-1]
         elif isinstance(part, Close):
