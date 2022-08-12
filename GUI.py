@@ -1,7 +1,6 @@
-from asyncio import DatagramProtocol
 from Tools import SerialPort
-from GUI import ManualControlFrame, SettingsFrame, DrawingFrame
-from GUI.Data import DataObject, tryLoadData, saveData
+from Frames import ManualControlFrame, SettingsFrame, DrawingFrame
+from Frames.Data import DataObject, tryLoadData, saveData
 import tkinter as tk
 from tkinter import ttk
 

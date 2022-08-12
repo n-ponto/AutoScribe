@@ -32,7 +32,7 @@ save_path: str = args.savepath
 if args.viz is None:
     if save_path is None:
         save_path = svg_path[:-4] + ".ncode"
-    assert(save_path[:-6].lower() == ".ncode"), \
+    assert(save_path[-6:].lower() == ".ncode"), \
         "To convert SVG to NCODE the save path must be to an NCODE file"
     svg_to_ncode(svg_path, save_path)
 # Vizualize
