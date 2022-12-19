@@ -32,7 +32,7 @@ void hardwareInit()
     penUpAngle = DEFAULT_UP;
     penDownAngle = DEFAULT_DOWN;
     penServo.attach(SERVO_PIN);
-    penServo.write(penUpAngle);
+    penServo.write(20);
 }
 
 void setup()

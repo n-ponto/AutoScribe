@@ -162,7 +162,7 @@ def path_to_segments(path_string: list, va: VizualizationAid = None) -> list:
             control = (part.control.real, part.control.imag)
             end = (part.end.real, part.end.imag)
             points = get_bezier_points([start, control, end])
-            assert(len(points) > 1), "No points returned"
+            assert(len(points) > 0), "No points returned"
             current_segment.extend(points)
             prev = points[-1]
         elif isinstance(part, CubicBezier):
