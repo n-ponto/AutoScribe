@@ -5,6 +5,7 @@ import os
 import logging
 import sys
 import time
+from threading import Thread
 from Tools.Encodings import Commands, Drawing, NCODE_MOVE
 from Tools.SerialPort import SerialPort
 
@@ -13,14 +14,18 @@ XMAX = 1200
 YMIN = -1200
 YMAX = 1200
 
+
 class NcodeSender:
 
     _serial: SerialPort
+    _thread: Thread
+    _continueSending: bool = True
+    _doneCallback: callable = None
 
     def __init__(self, serial: SerialPort):
         self._serial = serial
 
-    def send(self, filepath: str) -> bool:
+    def sendAsync(self, filepath: str, doneCallback = None) -> bool:
         '''
         Sends the ncode at the file path to the device
         Returns true on success, false otherwise
@@ -35,7 +40,10 @@ class NcodeSender:
         self._serial.writeByte(Commands.ENTER_DRAW_MODE)
         time.sleep(0.5)
         try:
-            self._send_points(data)
+            self._continueSending = True
+            self._doneCallback = doneCallback
+            self._thread = Thread(target=self._sendPoints, args=(data,))
+            self._thread.start()
         except KeyboardInterrupt:
             print("Sending Ncode Interrupted")
             self._serial.readStr()
@@ -48,7 +56,25 @@ class NcodeSender:
             return False
         return True
 
-    def _send_points(self, data: list):
+    def interrupt(self):
+        print("Sending Ncode Interrupted")
+        self._serial.readStr()
+        # Send emergency stop signal
+        self._continueSending = False
+        self._serial.flushTxBuffer()
+        self._serial.writePoint(Drawing.EMERGENCY_STOP, 0)
+        time.sleep(0.2)
+        self._serial.writePoint(Drawing.STOP_DRAWING, 0)
+        self._serial.flushRxBuffer()
+        time.sleep(0.2)
+        self._serial.readStr()
+        self._thread.join()
+        print('Done interrupting')
+
+    def waitForCompletion(self):
+        self._thread.join()
+
+    def _sendPoints(self, data: list):
         TX_DELAY = 0.01  # Time in seconds between sending points over serial
         i: int = 0
         # Start by completely filling the buffer
@@ -56,7 +82,7 @@ class NcodeSender:
         print("Initially filling buffer...")
         self._serial.readStr()
         RX_SZ = 64 / 4
-        while i < len(data) and i < RX_SZ:
+        while i < len(data) and i < RX_SZ and self._continueSending:
             x, y = data[i]
             self._serial.writePoint(x, y)
             i += 1
@@ -64,10 +90,10 @@ class NcodeSender:
         # Batch the rest
         print(f"Done filling buffer i={i}")
         prev = i
-        while i < len(data):
+        while i < len(data) and self._continueSending:
             # Wait for the low signal
             # print("Waiting for signal...")
-            timeout = time.time() + 30
+            timeout = time.time() + 40
             while self._serial.readByte() != 0xFF:
                 if time.time() > timeout:
                     self._serial.readStr()
@@ -76,25 +102,40 @@ class NcodeSender:
                     return
             # Fill the buffer again
             self._serial.flushRxBuffer()
-            while i < len(data) and i < prev+RX_SZ:
+            while i < len(data) and i < prev+RX_SZ and self._continueSending:
                 x, y = data[i]
                 self._serial.writePoint(x, y)
                 i += 1
                 time.sleep(TX_DELAY)
             print(f"Done sending more bytes, {i} total")
             prev = i
+        if not self._continueSending:
+            print("Interrupted")
+            return
         # Finally send end signal
         print('Done sending all coordinates')
         self._serial.flushRxBuffer()
         time.sleep(0.2)
         self._serial.writePoint(Drawing.STOP_DRAWING, 0)
+        # Wait for the done drawing signal
+        timeout = time.time() + 40
+        while self._serial.readByte() != 0xAB and self._continueSending:
+            if time.time() > timeout:
+                self._serial.readStr()
+                print('TIMEOUT')
+                return
+        # Call the done callback
+        if self._doneCallback is not None and self._continueSending:
+            print("Calling done callback")
+            self._doneCallback()
+            print("Done calling done callback")
 
     @staticmethod
     def _parseFile(filepath: str) -> list:
         '''
         Extracts and returns a list from points from an ncode file
         '''
-        if(filepath[-6:] != ".ncode"):
+        if (filepath[-6:] != ".ncode"):
             print("[ERROR] NcodeSender.send requires .ncode file")
             return None
         print("Parsing ncode file...")
@@ -114,18 +155,18 @@ class NcodeSender:
                     print(f"was {len(coords)} spaces")
                 # x = struct.pack("h", int(coords[0]))
                 x = int(coords[0])
-                assert(XMIN <= x and x <= XMAX), f"got invalid x value: {x}"
+                assert (XMIN <= x and x <= XMAX), f"got invalid x value: {x}"
                 # y = struct.pack('h', int(coords[0]))
                 y = int(coords[1])
-                assert(YMIN <= y and y <= YMAX), f'got invalid y value: {y}'
+                assert (YMIN <= y and y <= YMAX), f'got invalid y value: {y}'
 
                 # Encode the x value
                 x &= 0x0000FFFF
                 x &= ~Drawing.FLAG_MASK  # Clear bits for flags
                 if (movePen):
                     x |= Drawing.MOVE_PEN
-                assert(x <= 0x7FFF), f'outside valid range {x}'
-                assert(x != Drawing.EMERGENCY_STOP), f'emergency stop in file'
+                assert (x <= 0x7FFF), f'outside valid range {x}'
+                assert (x != Drawing.EMERGENCY_STOP), f'emergency stop in file'
 
                 # Send the values over serial
                 output.append((x, y))
@@ -146,7 +187,7 @@ if __name__ == '__main__':
     sp = SerialPort()
     ns = NcodeSender(sp)
     sp.awaitResponse()
-    if not ns.send(sys.argv[1]):
+    if not ns.sendAsync(sys.argv[1]):
         print("\nThere was an error sending the file")
         exit()
     print("Success!")

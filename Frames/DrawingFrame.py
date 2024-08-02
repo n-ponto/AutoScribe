@@ -35,16 +35,13 @@ class DrawingFrame(tk.Frame):
         self._lbl_file = tk.Label(self, text="Please select a file.")
         self._lbl_file.pack(padx=5, pady=5)
 
-        self._btn_viz = tk.Button(
-            self, text="Vizualize", command=self._vizualize, state='disabled')
+        self._btn_viz = tk.Button(self, text="Vizualize", command=self._vizualize, state='disabled')
         self._btn_viz.pack(padx=5, pady=5)
 
-        self._btn_send = tk.Button(
-            self, text="Send Ncode", command=self._send, state='disabled')
+        self._btn_send = tk.Button(self, text="Send Ncode", command=self._send, state='disabled')
         self._btn_send.pack(padx=5, pady=5)
 
-        self._btn_cancel = tk.Button(
-            self, text="Cancel", command=self._cancel, state='disabled')
+        self._btn_cancel = tk.Button(self, text="Cancel", command=self._cancel, state='disabled')
         self._btn_cancel.pack(padx=5, pady=5)
 
     def _selectFile(self):
@@ -74,18 +71,24 @@ class DrawingFrame(tk.Frame):
     def _send(self):
         # TODO: check file is valid again?
         print(f"Sending file {self._filename}")
-        self._sender.send(self._filename)
         self._btn_cancel['state'] = 'normal'
+        self._btn_send['state'] = 'disabled'
+        self._sender.sendAsync(self._filename, self._doneSending)
 
     def _cancel(self):
         self._serial.readStr()
         # Send emergency stop signal
         print("Cancelling the drawing process...")
-        self._serial.flushTxBuffer()
-        self._serial.writePoint(Drawing.EMERGENCY_STOP, 0)
+        self._sender.interrupt()
         time.sleep(0.2)
         self._serial.readStr()
         print("Cancelled")
+        self._doneSending()
+
+    def _doneSending(self):
+        self._btn_send['state'] = 'normal'
+        self._btn_cancel['state'] = 'disabled'
+        self._btn_viz['state'] = 'normal'
 
 
 if __name__ == "__main__":
