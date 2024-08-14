@@ -16,11 +16,14 @@ extern bool queueLowFlag;
 #include "Hardware.h"
 #include "Queue.h"
 
-#define VERBOSE_DEBUG
+// #define VERBOSE_DEBUG
 
-extern Servo penServo;
-extern uint8_t penUpAngle, penDownAngle;
-extern uint16_t stepperDelay;
+#define SIGNAL_START_SENDING 0xFA
+#define SIGNAL_BUFFER_EMPTY 0xFF
+#define SIGNAL_DONE_DRAWING 0xAB
+
+extern uint16_t stepperPeriodDrawing, stepperPeriodMoving;
+extern uint8_t mstepMulti;
 uint16_t penDelaySteps;  // Interrupt steps to pause while pen is moving
 bool penUp;
 int executedCount = 0;
@@ -48,13 +51,6 @@ unsigned char buffer[Q_BUFSZ];  // Data area for the queue
 Queue queue;                    // FIFO queue for the coordinates received
 volatile bool continueDrawing;  // Set by interrupt to leave drawing mode when complete
 Point prevCoordinate;           // Previous point reached
-
-void printPoint(Point *pt) {
-  Serial.print("Received\tX 0x");
-  Serial.print(pt->x, HEX);
-  Serial.print("\tY 0x");
-  Serial.println(pt->y, HEX);
-}
 
 // Set up the drawing state with new dequeued point
 void initDrawState(Point *pt, int multiplier) {
@@ -140,20 +136,22 @@ void drawingInterrupt() {
     }
 
     // Handle pen
-    int multiplier = 2;
-    if (newPt.x & MOVE_PEN) {      // If point not connected to previous
-      penServo.write(penUpAngle);  // Raise the pen
+    int multiplier = mstepMulti;
+    if (newPt.x & MOVE_PEN) {  // If point not connected to previous
+      // penServo.write(penUpAngle);  // Raise the pen
+      penMove();
       penUp = true;
-      penDelaySteps = DEFAULT_PEN_DELAY / (stepperDelay / 1000);
+      penDelaySteps = DEFAULT_PEN_DELAY / (stepperPeriodMoving / 1000);
       // Move at full speed
       multiplier = 1;
-      digitalWrite(HALF_STEP_PIN, LOW);
+      // digitalWrite(HALF_STEP_PIN, LOW);
     } else if (penUp) {
-      penServo.write(penDownAngle);  // Lower the pen
+      penDraw();
+      // penServo.write(penDownAngle);  // Lower the pen
       penUp = false;
-      penDelaySteps = DEFAULT_PEN_DELAY / (stepperDelay / 1000);
+      penDelaySteps = DEFAULT_PEN_DELAY / (stepperPeriodDrawing / 1000);
       // Move 2x as many steps
-      digitalWrite(HALF_STEP_PIN, HIGH);
+      // digitalWrite(HALF_STEP_PIN, HIGH);
     }
 #ifdef TESTING
     penDelaySteps = 0;  // Don't bother delaying if we're testing
@@ -205,10 +203,11 @@ void startDrawing() {
   digitalWrite(BOT_DIR_PIN, CCW);
   digitalWrite(HALF_STEP_PIN, HIGH);  // Half step
   prevCoordinate = {0, 0};            // Start at the origin
-  penServo.write(penUpAngle);         // Start the pen up
+  penMove();                          // Start with the pen up
   penUp = true;
   Timer2.attachInterrupt(drawingInterrupt);  // Set interrupt function
   Timer2.start();                            // Start the timer interrupt
+  Serial.println("Drawing started");
 }
 
 /// End the drawing mode
@@ -216,13 +215,14 @@ void endDrawing() {
   Timer2.stop();                               // Stop the timer interrupt
   Timer2.detachInterrupt();                    // Remove the interrupt function
   digitalWrite(ENABLE_PIN, DISABLE_STEPPERS);  // Disable stepper motors
-  penServo.write(penUpAngle);                  // End with the pen up
+  penMove();                                   // Move the pen up
   setRuntimeMode(acceptingCommands);           // Return to Accepting Commands
-  Serial.write(0xAB);                          // Send the end of drawing signal
+  Serial.write(SIGNAL_DONE_DRAWING);           // Send the end of drawing signal
   // Clear the serial buffer
   while (Serial.available() > 0) {
-    char t = Serial.read();
+    Serial.read();
   }
+  Serial.println("Drawing ended");
 }
 
 void drawingLoop() {
@@ -237,6 +237,11 @@ void drawingLoop() {
   by sending 64 bytes it's assumed there's no space in the buffer. As each
   point is read from the buffer, the buf_space increases by 1. */
   uint8_t buf_space = 0;
+  // Wait for the signal to start accepting points
+  while (Serial.read() != SIGNAL_START_SENDING) {
+    delay(100);
+  }
+  Serial.write(SIGNAL_START_SENDING);  // Signal to start sending points
   while (continueDrawing) {
     if (isFull(&queue)) {
 #ifdef TESTING
@@ -252,7 +257,7 @@ void drawingLoop() {
     more points and reset the space in the buffer. */
     if (buf_space >= bufferPts && Q_BUFSZ > queue.curSz + bufferPts) {
       buf_space = 0;
-      Serial.write(0xFF);
+      Serial.write(SIGNAL_BUFFER_EMPTY);
     }
 
     // While waiting for another point retransmit the send signal.
@@ -262,8 +267,8 @@ void drawingLoop() {
     Serial.readBytes((char *)&pnt, POINTSZ);
     buf_space++;
     if (pnt.x == EMERGENCY_STOP) {
-      // Leave the execution loop when receive the emergency stop command
-      break;
+      // Leave the execution loop when receives the emergency stop command
+      return;
     }
 
     // Strip the flags and convert to 16 bit 2's compliment encoding

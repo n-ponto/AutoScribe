@@ -14,6 +14,12 @@ XMAX = 1200
 YMIN = -1200
 YMAX = 1200
 
+TIMEOUT_DELAY = 40  # Delay in seconds before timeout
+
+SIGNAL_START_SENDING = 0xFA  # Signal from device to start sending data
+SIGNAL_BUFFER_EMPTY = 0xFF  # Signal from device that buffer is empty
+SIGNAL_DONE_DRAWING = 0xAB  # Signal from device that drawing is done
+
 
 class NcodeSender:
 
@@ -38,9 +44,8 @@ class NcodeSender:
         # Start drawing mode
         self._serial.flushRxBuffer()
         self._serial.writeByte(Commands.ENTER_DRAW_MODE)
-        time.sleep(0.2)
-        self._serial.readStr()
         time.sleep(0.5)
+        self._serial.readStr()
         try:
             self._continueSending = True
             self._doneCallback = doneCallback
@@ -63,25 +68,53 @@ class NcodeSender:
         self._serial.readStr()
         # Send emergency stop signal
         self._continueSending = False
-        self._serial.flushTxBuffer()
         self._serial.writePoint(Drawing.EMERGENCY_STOP, 0)
         time.sleep(0.2)
-        self._serial.writePoint(Drawing.STOP_DRAWING, 0)
-        self._serial.flushRxBuffer()
-        time.sleep(0.2)
-        self._serial.readStr()
         self._thread.join()
-        print('Done interrupting')
+        print('Stopped thread, waiting on device...')
+        self._wait_for_byte(SIGNAL_DONE_DRAWING)
+        self._serial.flushRxBuffer()
+        print("Device has stopped.")
 
     def waitForCompletion(self):
         self._thread.join()
 
+    def _wait_for_byte(self, expected_byte: int) -> bool:
+        """Waits for a byte to be received from the device
+        Args:
+            byte: The byte to wait for
+        Returns:
+            True if the byte was received, False if timed out
+        """
+        timeout = time.time() + TIMEOUT_DELAY
+        unexpected_buffer = []
+        byte = None
+        while self._continueSending:
+            byte = self._serial.readByte()
+            if byte == expected_byte:
+                break
+            elif byte is not None:
+                unexpected_buffer.append(byte)
+            elif byte is None and len(unexpected_buffer) > 0:
+                print(f"\tunexpected bytes as text: {''.join([chr(x) for x in unexpected_buffer])}")
+                unexpected_buffer = []
+            if time.time() > timeout:
+                break
+            time.sleep(0.1)
+
+        if len(unexpected_buffer) > 0:
+            print(f"\tunexpected bytes as text: {''.join([chr(x) for x in unexpected_buffer])}")
+
+        if byte == expected_byte:
+            return False
+        elif time.time() > timeout:
+            print('TIMEOUT')
+            return True
+        return True
+
     def _sendPoints(self, data: list):
         TX_DELAY = 0.01  # Time in sec between sending individual coordinates
-        TIMEOUT_DELAY = 40  # Delay in seconds before timeout
-        RX_SZ = 64 / 4  # Size of the RX buffer in coordinate pairs
-        SIGNAL_BUFFER_EMPTY = 0xFF  # Signal from device that buffer is empty
-        SIGNAL_DONE_DRAWING = 0xAB  # Signal from device that drawing is done
+        RX_SZ = int(64 / 4)  # Size of the RX buffer in coordinate pairs
         i: int = 0
 
         def send_batch():
@@ -94,52 +127,29 @@ class NcodeSender:
                 i += 1
                 time.sleep(TX_DELAY)
 
-        def wait_for_byte(expected_byte: int) -> bool:
-            """Waits for a byte to be received from the device
-            Args:
-                byte: The byte to wait for
-            Returns:
-                True if the byte was received, False if timed out
-            """
-            timeout = time.time() + TIMEOUT_DELAY
-            unexpected_buffer = []
-            while self._continueSending:
-                byte = self._serial.readByte()
-                if byte == expected_byte:
-                    return False
-                elif byte is not None:
-                    print(f'\tunexpected byte: {byte}')
-                    unexpected_buffer.append(byte)
-                elif byte is None and len(unexpected_buffer) > 0:
-                    print(f"\tunexpected bytes as text: {''.join([chr(x) for x in unexpected_buffer])}")
-                    unexpected_buffer = []
-                if time.time() > timeout:
-                    self._serial.readStr()
-                    print('TIMEOUT')
-                    self._serial.writePoint(Drawing.STOP_DRAWING, 0)
-                    return True
-                time.sleep(0.1)
-            return True
+        # Handshake with device before sending data
+        print(f"Sending a total of {len(data)} coordinate pairs.")
+        self._serial.flushTxBuffer()  # Clear the TX buffer
+        self._serial.writeByte(SIGNAL_START_SENDING)
+        time.sleep(0.5)
+        print("Waiting for start signal from device...")
+        if self._wait_for_byte(SIGNAL_START_SENDING):
+            return
 
-        # Start by completely filling the buffer
-        print(f"Sending a total of {len(data)} coordinate pairs")
-        print("Initially filling buffer...")
-        self._serial.readStr()
-
+        print("Received start signal. Sending coordinates...")
         send_batch()
-        print(f"Done initially filling buffer i={i}")
-
-        # Batch the rest
+        print(f'Send initial {RX_SZ} bytes.')
         while i < len(data) and self._continueSending:
             # Wait for the low signal from device
             print("Waiting for empty buffer signal from device...")
-            if wait_for_byte(SIGNAL_BUFFER_EMPTY):
+            if self._wait_for_byte(SIGNAL_BUFFER_EMPTY):
                 return
             print(f'Recieved empty buffer signal, sending {RX_SZ} more bytes')
-            # Fill the buffer again
+
+            # Fill the buffer
             self._serial.flushRxBuffer()
             send_batch()
-            print(f"Done sending more bytes, i={i} total")
+            print(f"Done sending bytes, i={i} total")
 
         if not self._continueSending:
             print("Interrupted")
@@ -153,7 +163,7 @@ class NcodeSender:
 
         # Wait for response from device
         print('Waiting for done drawing signal from device...')
-        wait_for_byte(SIGNAL_DONE_DRAWING)
+        self._wait_for_byte(SIGNAL_DONE_DRAWING)
         print('Received done drawing signal from device!')
         # Call the done callback
         if self._doneCallback is not None and self._continueSending:

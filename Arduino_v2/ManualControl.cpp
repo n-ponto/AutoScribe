@@ -91,10 +91,10 @@ void manualControl() {
 
         switch (key) {
             case (SP_P):
-                penServo.write(penDownAngle);
+                penDraw();
                 break;
             case (SP_R):
-                penServo.write(penUpAngle);
+                penMove();
                 break;
             case (UP_P):
                 digitalWrite(BOT_DIR_PIN, CW);

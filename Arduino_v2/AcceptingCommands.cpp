@@ -11,7 +11,7 @@ Contains all code specific to the Accepting Commands runtime mode.
 
 void acceptingCommands()
 {
-    Serial.println("Starting accepting commands runtime mode.");
+    Serial.println("Accepting commands, waiting...");
     // Read a byte (command) from serial
     // Call the function corresponding to that commmand
     // Function will handle reading more data from serial

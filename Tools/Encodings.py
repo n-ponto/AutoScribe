@@ -11,7 +11,7 @@ class Commands:
     CHANGE_PEN_ANGLE =      1
     MOVE_TO_COORDINATE =    2
     RESET_HOME =            3
-    SET_STEPPER_DELAY =     4
+    SET_MOVE_SPEED =     4
     ENTER_DRAW_MODE =       8
     ENTER_MANUAL_CONTROL_MODE= 9
 

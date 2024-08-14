@@ -28,5 +28,13 @@ Constants for hardware pins, constant values, and defaults
 #define DEFAULT_DOWN 70             // Angle when pen is down on the paper
 #define DEFAULT_STEPPER_DELAY 2000  // Microsecond delay between stepper pulses
 #define DEFAULT_PEN_DELAY 300       // Millisecond delay to pause while the pen goes up/down
+#define SPEED_MULTIPLIER 1          // Multiplier to convert from mm/s to whole-steps/s
+#define MIN_STEPS_PER_SEC 500       // Minimum steps per second for the stepper motor
+#define MAX_MICROSTEP 8             // Maximum microstepping setting
+
+void (*getChangeStepFunction(void))(void);
+
+void penDraw();
+void penMove();
 
 #endif  // HARDWARE_H_

@@ -21,14 +21,14 @@ class DataObject:
     WorkingDirectory: str
     PenUpHeight: int
     PenDownHeight: int
+    MoveSpeed: int
 
     def __init__(self, default):
         if default:
             self.initDefault()
 
     def initDefault(self) -> None:
-        ''' Default values should be set if no settings file exists
-        '''
+        '''Default values should be set if no settings file exists.'''
         default_wd = os.path.realpath(__file__)
         default_wd = os.path.realpath(os.path.join(default_wd, '../images'))
         self.WorkingDirectory = default_wd
@@ -36,8 +36,7 @@ class DataObject:
         self.PenDownHeight = Defaults.PenDownHeight
 
     def initSettingsOnArduino(self, serialPort) -> None:
-        if (self.PenUpHeight != Defaults.PenUpHeight or \
-            self.PenDownHeight != Defaults.PenDownHeight):
+        if (self.PenUpHeight != Defaults.PenUpHeight or self.PenDownHeight != Defaults.PenDownHeight):
             # Set pen range
             serialPort.writeByte(Commands.SET_PEN_RANGE)
             serialPort.writeByte(int(self.PenUpHeight))
@@ -48,8 +47,7 @@ class DataObject:
 
 
 def tryLoadData() -> DataObject:
-    ''' Try to load settings object from file, or create a new one 
-    '''
+    '''Try to load settings object from file, or create a new one.'''
     if not os.path.exists(DATA_FILE_PATH):
         return DataObject(default=True)
     else:
@@ -59,7 +57,6 @@ def tryLoadData() -> DataObject:
 
 
 def saveData(obj: DataObject):
-    ''' Save the settings 
-    '''
+    ''' Save the settings.'''
     with open(DATA_FILE_PATH, 'wb') as f:
         pickle.dump(obj, f)

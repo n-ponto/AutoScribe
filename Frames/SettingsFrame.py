@@ -7,12 +7,12 @@ from Tools.Encodings import *
 MIN_ANGLE = 20
 MAX_ANGLE = 140
 
+
 class PenAngleEntry(tk.Entry):
 
     _serial: SerialPort = None
 
     def __init__(self, master: tk.Misc, sp: SerialPort, initVal: int):
-        sv = tk.IntVar()
         super().__init__(master=master, width=5, textvariable=tk.IntVar(master, initVal))
         self.bind("<Up>", self._up)
         self.bind("<Down>", self._down)
@@ -64,19 +64,16 @@ class TunePenFrame(tk.Frame):
         title.grid(row=0, columnspan=2, pady=5)
 
         lbl_up = tk.Label(master=self, text="Up height: ")
-        self._ent_up = PenAngleEntry(
-            self, self._serial, self._dataObject.PenUpHeight)
+        self._ent_up = PenAngleEntry(self, self._serial, self._dataObject.PenUpHeight)
         lbl_up.grid(row=1, column=0)
         self._ent_up.grid(row=1, column=1)
 
         lbl_down = tk.Label(master=self, text="Down height: ")
-        self._ent_down = PenAngleEntry(
-            self, self._serial, self._dataObject.PenDownHeight)
+        self._ent_down = PenAngleEntry(self, self._serial, self._dataObject.PenDownHeight)
         lbl_down.grid(row=2, column=0)
         self._ent_down.grid(row=2, column=1)
         # Update button
-        btn_update = tk.Button(
-            master=self, text="Save angles", command=self._saveAngles)
+        btn_update = tk.Button(master=self, text="Save angles", command=self._saveAngles)
         btn_update.grid(row=3, columnspan=2, pady=5)
 
     def _saveAngles(self):
@@ -116,23 +113,33 @@ class TunePenFrame(tk.Frame):
         time.sleep(0.1)
         self._serial.readStr()
 
-# class StepperDelayFrame(tk.Frame):
-#     DEFAULT_DELAY =
 
-#     def __init__(self, master: tk.Misc, sp: SerialPort):
-#         super().__init__(master=master)
-#         self._serial = sp
-#         self._render()
+class StepperSpeedFrame(tk.Frame):
+    DEFAULT_DELAY = 2000
 
-#     def _render(self):
-#         title = tk.Label(master=self, text="Tune Pen", font='Helvetica 12 bold')
-#         title.pack(pady=5)
+    def __init__(self, master: tk.Misc, sp: SerialPort, dataObject: DataObject):
+        super().__init__(master=master)
+        self._serial = sp
+        self._dataObject = dataObject
+        self._render()
 
-#         entry = tk.Entry(master=self, width=5, textvariable=)
+    def _render(self):
+        title = tk.Label(master=self, text="Tune Pen", font='Helvetica 12 bold')
+        title.pack(pady=5)
 
-#         btn_update = tk.Button(
-#             master=self, text="Update delay", command=self._saveAngles)
-#         btn_update.pack(pady=5)
+        self._entry = tk.Entry(master=self, width=5, textvariable=tk.IntVar(self, self.DEFAULT_DELAY))
+        self._entry.pack(pady=5)
+
+        self._btn_update = tk.Button(master=self, text="Update delay", command=self._updateSpeed)
+        self._btn_update.pack(pady=5)
+
+    def _updateSpeed(self):
+        speed = int(self._entry.get())
+        self._serial.writeByte(Commands.SET_MOVE_SPEED)
+        self._serial.writeShort(speed)
+        time.sleep(0.5)
+        self._serial.readStr()
+        self._dataObject.MoveSpeed = speed
 
 
 class SettingsFrame(tk.Frame):
@@ -145,6 +152,8 @@ class SettingsFrame(tk.Frame):
     def _render(self):
         tune_pen_frame = TunePenFrame(self, self._serial, self._dataObject)
         tune_pen_frame.grid(row=0, column=0)
+        stepper_speed_frame = StepperSpeedFrame(self, self._serial, self._dataObject)
+        stepper_speed_frame.grid(row=1, column=0)
 
 
 ################################################################################
