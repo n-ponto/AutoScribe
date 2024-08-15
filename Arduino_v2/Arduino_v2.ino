@@ -47,6 +47,7 @@ void setup()
     stepperPeriodDrawing = DEFAULT_STEPPER_DELAY;
     stepperPeriodMoving = DEFAULT_STEPPER_DELAY;
     mstepMulti = 1;
+    changeDrawStepFn = getChangeStepFunction();
     Timer2.init(stepperPeriodDrawing, NULL);
     runtime_mode = acceptingCommands;
     hardwareInit();

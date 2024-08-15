@@ -205,6 +205,9 @@ def svg_to_segments(filepath: str, va: VizualizationAid = None) -> list:
     segments = []  # List for storing outpoint coordiantes
 
     print(f"Found {len(coordinate_strs)} different paths in the file")
+    if len(coordinate_strs) == 0:
+        print("\nEnsure that all objects in the file are converted to paths.\nIn InkScape, select all objects and use 'Path' > 'Object to Path'\n")
+        return None
     logger.debug(f"Found {len(coordinate_strs)} different paths in the file")
     viz_paths = va is not None and va.viz_mode == VizMode.PATHS
     for i, path_string in enumerate(coordinate_strs):

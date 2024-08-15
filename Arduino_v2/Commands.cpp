@@ -81,10 +81,10 @@ void setStepperDelay() {
 
   // Check if the multiplier is too high
   if (mstepMulti > MAX_MICROSTEP) {
-    Serial.print("Cannot support speed of ");
+    Serial.print("WARNING: Speed lower than recommended for microstepping ");
     Serial.print(speed);
     Serial.println(" steps/s");
-    return;
+    mstepMulti = MAX_MICROSTEP;
   }
 
   stepperPeriodDrawing = 1000000 / (speed * mstepMulti);  // Convert from steps/s to us/micro-step
