@@ -38,6 +38,10 @@ void acceptingCommands() {
       case 3:
         setStepperDelay();
         break;
+      case 4:
+        // Disconnect signal, wait for reconnect
+        waitForConnection();
+        break;
       case 8:
         enterDrawMode();
         break;

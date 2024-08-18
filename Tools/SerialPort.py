@@ -1,13 +1,14 @@
-from Tools.Encodings import ConsoleColors as cc
-import serial
-from serial import SerialException
-from serial.tools import list_ports
+from Tools.Encodings import ConsoleColors as cc, Commands
 import sys
 import os
 import time
 import struct
-import bluetooth
-import threading
+try:
+    import bluetooth
+except ModuleNotFoundError:
+    print('bluetooth module could not be found.')
+    print('follow installation instructions here')
+    print('https://github.com/pybluez/pybluez/blob/master/docs/install.rst')
 sys.path.append(os.path.dirname(__file__) + "/..")
 
 BLUETOOTH_DEVICE_NAME = "AutoScribe"
@@ -75,13 +76,12 @@ class ComPort():
         ''' Sends a handshake byte to the device to ensure it is ready to receive data.'''
         # Wait for handshake signal from device
         print("Waiting for handshake signal from device...")
-
-        def waitForHandshake():
-            while self.readByte() != HANDSHAKE:
-                pass
-        thread = threading.Thread(target=waitForHandshake)
-        thread.start()
-        thread.join(5)  # Wait for 5 seconds
+        timeout = time.time() + 5
+        while self.readByte() != HANDSHAKE:
+            time.sleep(.5)
+            if time.time() > timeout:
+                print("Timeout while waiting for handshake signal.")
+                break
         print("Received handshake signal from device.")
         self.flushRxBuffer()
         self.flushTxBuffer()
@@ -93,13 +93,20 @@ class ComPort():
         time.sleep(0.5)
         self.readStr()
 
+    def __del__(self):
+        '''Send signal to disconnect from the device.'''
+        self.writeByte(Commands.DISCONNECT)
+        print('Sent disconnect signal to device.')
+
 
 class SerialPort(ComPort):
 
-    print(serial.__version__)
-    _port: serial.Serial
-
     def __init__(self, port='COM3', baudrate=9600, timeout=1) -> None:
+        import serial
+        from serial import SerialException
+        from serial.tools import list_ports
+        print(serial.__version__)
+
         try:
             self.buffer_size = 12800
             self._initPort(port, baudrate, timeout)
@@ -109,6 +116,7 @@ class SerialPort(ComPort):
             self._tryFindArduino()
 
     def __del__(self):
+        super().__del__()
         if self._port is not None:
             self._port.close()
 
@@ -132,8 +140,12 @@ class SerialPort(ComPort):
             valid_port = ports[idx][0]
         self._initPort(valid_port, 9600, 1)
 
-    def _initPort(self, port: str, baudrate: int, timeout: int) -> serial.Serial:
-        ''' Creates a serial port object with the given parameters.'''
+    def _initPort(self, port: str, baudrate: int, timeout: int):
+        ''' Creates a serial port object with the given parameters.
+        Args:
+            port: the port to connect to
+            baudrate: the baudrate to use
+            timeout: the timeout in seconds'''
         self._port = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
         self._port.set_buffer_size(rx_size=self.buffer_size, tx_size=self.buffer_size)
 
@@ -233,9 +245,12 @@ class BluetoothPort(ComPort):
     """Communicates with microcontroller over Bluetooth module."""
 
     _address: str
-    _socket: bluetooth.BluetoothSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+    _socket = None
 
     def __init__(self, address=None, baudrate=9600, timeout=1) -> None:
+        self._socket: bluetooth.BluetoothSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+        self._socket.settimeout(timeout)
+
         if address is None:
             self._address = self._search_for_address()
         else:
@@ -246,8 +261,10 @@ class BluetoothPort(ComPort):
         print(f'Connected to \"{name}\" {host} on {port}')
 
     def __del__(self):
+        super().__del__()
         print("Closing Bluetooth socket")
-        self._socket.close()
+        if self._socket is not None:
+            self._socket.close()
 
     def _search_for_address(self) -> str:
         print('Searching for nearby devices...')
@@ -291,13 +308,7 @@ class BluetoothPort(ComPort):
     def readStr(self) -> None:
         ''' Reads and prints all strings received.'''
         data = None
-
-        def read_all():
-            nonlocal data
-            data = self._socket.recv(1024)
-        thread = threading.Thread(target=read_all)
-        thread.start()
-        thread.join(.25)  # Wait for 0.25 seconds
+        data = self._socket.recv(1024)
         if not data:
             print("Nothing to read")
             return
@@ -310,11 +321,14 @@ class BluetoothPort(ComPort):
     def readByte(self) -> int:
         ''' Reads a single byte and returns it as an int. Returns None if there
         is no byte avaliable.'''
-        data = self._socket.recv(1)
+        data = None
+        try:
+            data = self._socket.recv(1)
+        except OSError:
+            pass
         if not data:
             return None
-        byte = int.from_bytes(data, 'big')
-        return byte
+        return int.from_bytes(data, 'big')
 
     def write(self, x: bytes) -> None:
         ''' Writes a list of bytes.'''

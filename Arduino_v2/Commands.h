@@ -5,9 +5,10 @@
 #define RUNTIME_CHANGE 0b1000
 
 // Command               Index   Encoding
-void setPenRange();      // 1    0000 0001
-void changePenAngle();   // 2    0000 0010
-void setStepperDelay();  // 3    0000 0011
+void setPenRange();        // 1    0000 0001
+void changePenAngle();     // 2    0000 0010
+void setStepperDelay();    // 3    0000 0011
+void waitForConnection();  // 4    0000 0100
 // Weird gap is so we can check the 8 bit to see if
 // we should switch out of accepting commands
 void enterDrawMode();           // 8    0000 1000

@@ -2,7 +2,6 @@
 Sends ncode to the device
 '''
 import os
-import logging
 import sys
 import time
 from threading import Thread

@@ -7,6 +7,7 @@ should be simple and have no loops or nested functions.
 */
 
 #include <Arduino.h>
+#include <NOKIA5110_TEXT.h>
 #include <Servo.h>
 #include <TimerTwo.h>
 
@@ -14,6 +15,7 @@ should be simple and have no loops or nested functions.
 #include "RuntimeModes.h"
 
 extern Servo penServo;
+extern NOKIA5110_TEXT lcdScreen;
 extern uint8_t penUpAngle, penDownAngle;
 extern uint16_t stepperPeriodDrawing;
 extern uint8_t mstepMulti;
@@ -64,4 +66,48 @@ void setStepperDelay() {
   }
   Serial.readBytes((char *)&speed, 2);
   updateStepperSpeed(speed);
+}
+
+/// @brief Perform the handshake with the computer to initialize
+void waitForConnection() {
+  delay(50);
+  lcdScreen.LCDInit(false, SCREEN_CONTRAST, SCREEN_BIAS);  // init  the lCD
+  lcdScreen.LCDClear(0x00);                                // Clear whole screen
+  lcdScreen.LCDFont(LCDFont_Default);                      // Set the font
+  lcdScreen.LCDgotoXY(0, 0);                               // (go to (X , Y) (0-84 columns, 0-5 blocks) top left corner
+  lcdScreen.LCDString(" AutoScribe ");                     // Print the title
+  delay(50);
+
+  lcdScreen.LCDgotoXY(0, 2);
+  lcdScreen.LCDString("Start.......");
+  lcdScreen.LCDgotoXY(0, 3);
+  lcdScreen.LCDString("Connect.....");
+  lcdScreen.LCDgotoXY(0, 4);
+  lcdScreen.LCDString("Data........");
+
+  while (!Serial) {
+    delay(50);
+  }
+
+  lcdScreen.LCDgotoXY(70, 2);
+  lcdScreen.LCDString("OK");
+
+  // Wait for handshake response from computer
+  Serial.write(HANDSHAKE);
+  while (Serial.read() != HANDSHAKE) {
+    delay(50);
+    Serial.write(HANDSHAKE);
+  }
+
+  lcdScreen.LCDgotoXY(70, 3);
+  lcdScreen.LCDString("OK");
+
+  // Read pen heights
+  setPenRange();
+
+  // Read stepper speed
+  setStepperDelay();
+
+  lcdScreen.LCDgotoXY(70, 4);
+  lcdScreen.LCDString("OK");
 }

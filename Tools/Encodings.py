@@ -10,10 +10,11 @@ class Commands:
     '''Commands that can be sent to the Arduino. Defined in Commands.h'''
     SET_PEN_RANGE = 1
     CHANGE_PEN_ANGLE = 2
-    MOVE_TO_COORDINATE = 0 # Not used
+    MOVE_TO_COORDINATE = 0  # Not used
     RESET_HOME = 0  # Not used
     SET_MOVE_SPEED = 3
-    ENTER_DRAW_MODE = 8 
+    DISCONNECT = 4
+    ENTER_DRAW_MODE = 8
     ENTER_MANUAL_CONTROL_MODE = 9
 
 # Special encodings for the drawing runtime mode

@@ -27,5 +27,6 @@ serial.handshake(dataObject)
 
 root.mainloop()
 
-print("Saving settings")
+print("Saving settings...", end=" ")
 dataObject.saveData()
+print("Done.")
