@@ -9,6 +9,7 @@ extern uint8_t penUpAngle, penDownAngle;
 extern uint16_t stepperPeriodDrawing, stepperPeriodMoving;
 extern uint8_t mstepMulti;
 extern void (*changeDrawStepFn)();
+extern bool penUp;
 
 void fullStep() {
   digitalWrite(HALF_STEP_PIN, LOW);
@@ -52,10 +53,12 @@ void penDraw() {
   penServo.write(penDownAngle);
   Timer2.setPeriod(stepperPeriodDrawing);
   changeDrawStepFn();
+  penUp = false;
 }
 
 void penMove() {
   penServo.write(penUpAngle);
   Timer2.setPeriod(stepperPeriodMoving);
   fullStep();
+  penUp = true;
 }

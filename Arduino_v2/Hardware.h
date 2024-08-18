@@ -12,6 +12,11 @@ Constants for hardware pins, constant values, and defaults
 #define ENABLE_PIN 8      // Pin to enable both motors
 #define HALF_STEP_PIN A0  // Pin to enable half stepping
 #define QRTR_STEP_PIN 4   // Pin to enable quarter stepping
+#define SCREEN_RST 52
+#define SCREEN_CE 53
+#define SCREEN_DC 51
+#define SCREEN_DIN 49
+#define SCREEN_CLK 47
 
 // Pen servo pin
 #define SERVO_PIN 10  // Pin for the servo motor holding the pen
@@ -22,6 +27,13 @@ Constants for hardware pins, constant values, and defaults
 // Stepper enable values
 #define ENABLE_STEPPERS LOW
 #define DISABLE_STEPPERS HIGH
+
+// LCD screen settings
+#define SCREEN_UPDATE_PERIOD 300  // Time in milliseconds between screen updates
+#define SCREEN_CONTRAST 0xBF
+#define SCREEN_BIAS 0x13
+#define SCRN_CH_WD 7  // Width of a character in pixels
+#define SCRN_WD 84    // Width of the screen in pixels
 
 // Defaults
 #define DEFAULT_UP 50               // Angle for when the pen is up off the paper
