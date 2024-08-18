@@ -64,13 +64,13 @@ class NcodeSender:
         return True
 
     def interrupt(self):
+        self._continueSending = False
         print("Sending Ncode Interrupted")
         self._serial.readStr()
         # Send emergency stop signal
-        self._continueSending = False
         self._serial.writePoint(Drawing.EMERGENCY_STOP, 0)
         time.sleep(0.2)
-        self._thread.join()
+        self._thread.join(timeout=5)
         print('Stopped thread, waiting on device...')
         self._wait_for_byte(SIGNAL_DONE_DRAWING)
         self._serial.flushRxBuffer()

@@ -1,4 +1,4 @@
-from Tools import SerialPort
+from Tools import SerialPort, BluetoothPort
 from Frames import ManualControlFrame, SettingsFrame, DrawingFrame
 from Frames.Data import DataObject, tryLoadData, saveData
 import tkinter as tk
@@ -11,7 +11,7 @@ root.resizable(0, 0)  # Don't resize x or y
 root.title("AutoScribe GUI")
 tabControl = ttk.Notebook(root)
 
-serial = SerialPort()
+serial = BluetoothPort()
 
 tab1 = SettingsFrame(tabControl, serial, dataObject)
 tab2 = ManualControlFrame(tabControl, serial)
