@@ -62,3 +62,34 @@ void penMove() {
   fullStep();
   penUp = true;
 }
+
+void updateStepperSpeed(uint16_t speed) {
+  // Read two bytes for the time to delay pulses to the stepper
+  // The time is measured in microseconds and should be in the range 500-1200ish
+  speed *= SPEED_MULTIPLIER;  // Convert from mm/s to steps/s
+  mstepMulti = 1;             // Reset the microstepping multiplier
+
+  // Double multiplier until the speed is greater than the minimum
+  while (speed * mstepMulti < MIN_STEPS_PER_SEC && mstepMulti <= MAX_MICROSTEP) {
+    mstepMulti *= 2;
+  }
+
+  // Check if the multiplier is too high
+  if (mstepMulti > MAX_MICROSTEP) {
+    Serial.print("WARNING: Speed lower than recommended for microstepping ");
+    Serial.print(speed);
+    Serial.println(" steps/s");
+    mstepMulti = MAX_MICROSTEP;
+  }
+
+  stepperPeriodDrawing = 1000000 / (speed * mstepMulti);  // Convert from steps/s to us/micro-step
+
+  Serial.print("Microstepping multiplier set to ");
+  Serial.println(mstepMulti);
+  Serial.print("Stepper delay reset to ");
+  Serial.print(stepperPeriodDrawing);
+  Serial.println("us");
+
+  // Update the function for microstepping
+  changeDrawStepFn = getChangeStepFunction();
+}

@@ -16,9 +16,9 @@ YMAX = 1200
 
 TIMEOUT_DELAY = 40  # Delay in seconds before timeout
 
-SIGNAL_START_SENDING = 0xFA  # Signal from device to start sending data
+DRAW_START_SENDING = 0xFA  # Signal from device to start sending data
 SIGNAL_BUFFER_EMPTY = 0xFF  # Signal from device that buffer is empty
-SIGNAL_DONE_DRAWING = 0xAB  # Signal from device that drawing is done
+DRAW_DONE = 0xAB  # Signal from device that drawing is done
 
 
 class NcodeSender:
@@ -72,7 +72,7 @@ class NcodeSender:
         time.sleep(0.2)
         self._thread.join(timeout=5)
         print('Stopped thread, waiting on device...')
-        self._wait_for_byte(SIGNAL_DONE_DRAWING)
+        self._wait_for_byte(DRAW_DONE)
         self._serial.flushRxBuffer()
         print("Device has stopped.")
 
@@ -130,10 +130,10 @@ class NcodeSender:
         # Handshake with device before sending data
         print(f"Sending a total of {len(data)} coordinate pairs.")
         self._serial.flushTxBuffer()  # Clear the TX buffer
-        self._serial.writeByte(SIGNAL_START_SENDING)
+        self._serial.writeByte(DRAW_START_SENDING)
         time.sleep(0.5)
         print("Waiting for start signal from device...")
-        if self._wait_for_byte(SIGNAL_START_SENDING):
+        if self._wait_for_byte(DRAW_START_SENDING):
             return
 
         print("Received start signal. Sending coordinates...")
@@ -163,7 +163,7 @@ class NcodeSender:
 
         # Wait for response from device
         print('Waiting for done drawing signal from device...')
-        self._wait_for_byte(SIGNAL_DONE_DRAWING)
+        self._wait_for_byte(DRAW_DONE)
         print('Received done drawing signal from device!')
         # Call the done callback
         if self._doneCallback is not None and self._continueSending:

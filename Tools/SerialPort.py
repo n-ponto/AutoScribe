@@ -9,7 +9,9 @@ import struct
 import bluetooth
 import threading
 sys.path.append(os.path.dirname(__file__) + "/..")
+
 BLUETOOTH_DEVICE_NAME = "AutoScribe"
+HANDSHAKE = 0x55
 
 
 class ComPort():
@@ -68,6 +70,28 @@ class ComPort():
     def flushRxBuffer(self):
         ''' Clears the receiving buffer'''
         raise NotImplementedError
+
+    def handshake(self, dataObject):
+        ''' Sends a handshake byte to the device to ensure it is ready to receive data.'''
+        # Wait for handshake signal from device
+        print("Waiting for handshake signal from device...")
+
+        def waitForHandshake():
+            while self.readByte() != HANDSHAKE:
+                pass
+        thread = threading.Thread(target=waitForHandshake)
+        thread.start()
+        thread.join(5)  # Wait for 5 seconds
+        print("Received handshake signal from device.")
+        self.flushRxBuffer()
+        self.flushTxBuffer()
+        self.writeByte(HANDSHAKE)
+        print("Sent handshake signal to device.")
+        self.writeByte(int(dataObject.PenUpHeight))
+        self.writeByte(int(dataObject.PenDownHeight))
+        self.writeShort(int(dataObject.MoveSpeed))
+        time.sleep(0.5)
+        self.readStr()
 
 
 class SerialPort(ComPort):
@@ -205,11 +229,6 @@ class SerialPort(ComPort):
         self._port.reset_input_buffer()
 
 
-if __name__ == '__main__':
-    sp = SerialPort()
-    sp.awaitResponse()
-
-
 class BluetoothPort(ComPort):
     """Communicates with microcontroller over Bluetooth module."""
 
@@ -272,6 +291,7 @@ class BluetoothPort(ComPort):
     def readStr(self) -> None:
         ''' Reads and prints all strings received.'''
         data = None
+
         def read_all():
             nonlocal data
             data = self._socket.recv(1024)

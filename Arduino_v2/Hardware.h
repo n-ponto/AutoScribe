@@ -4,6 +4,8 @@ Constants for hardware pins, constant values, and defaults
 #ifndef HARDWARE_H_
 #define HARDWARE_H_
 
+#include <Arduino.h>
+
 // Stepper pins
 #define TOP_STP_PIN 3     // Pin for stepping the top motor
 #define TOP_DIR_PIN 6     // Pin for changing the top motor direction
@@ -39,14 +41,20 @@ Constants for hardware pins, constant values, and defaults
 #define DEFAULT_UP 50               // Angle for when the pen is up off the paper
 #define DEFAULT_DOWN 70             // Angle when pen is down on the paper
 #define DEFAULT_STEPPER_DELAY 2000  // Microsecond delay between stepper pulses
+#define DEFAULT_DRAWING_SPEED 250   // Default speed for the stepper motor while drawing
 #define DEFAULT_PEN_DELAY 300       // Millisecond delay to pause while the pen goes up/down
 #define SPEED_MULTIPLIER 1          // Multiplier to convert from mm/s to whole-steps/s
 #define MIN_STEPS_PER_SEC 500       // Minimum steps per second for the stepper motor
 #define MAX_MICROSTEP 8             // Maximum microstepping setting
 
-void (*getChangeStepFunction(void))(void);
+// Serial communication signals
+#define DRAW_DONE 0xAB
+#define DRAW_START_SENDING 0xFA
+#define DRAW_BUFFER_EMPTY 0xFF
+#define HANDSHAKE 0x55
 
 void penDraw();
 void penMove();
+void updateStepperSpeed(uint16_t speed);
 
 #endif  // HARDWARE_H_

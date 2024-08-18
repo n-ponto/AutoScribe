@@ -96,19 +96,11 @@ class TunePenFrame(tk.Frame):
         self._dataObject.PenDownHeight = int(self._ent_down.get())
 
     def _focusIn(self, event):
-        '''
-        Start the manual control runtime mode
-        '''
-        print("Focus in on settings frame")
+        print("Focus in on TunePenFrame")
         self._serial.writeByte(Commands.CHANGE_PEN_ANGLE)
-        time.sleep(0.1)
-        self._serial.readStr()
 
     def _focusOut(self, event=None):
-        '''
-        End the manual control runtime mode
-        '''
-        print("Focus out on settings frame")
+        print("Focus out on TunePenFrame")
         self._serial.writeByte(0xFF)
         time.sleep(0.1)
         self._serial.readStr()
@@ -124,13 +116,13 @@ class StepperSpeedFrame(tk.Frame):
         self._render()
 
     def _render(self):
-        title = tk.Label(master=self, text="Tune Pen", font='Helvetica 12 bold')
+        title = tk.Label(master=self, text="Stepper Speed", font='Helvetica 12 bold')
         title.pack(pady=5)
 
-        self._entry = tk.Entry(master=self, width=5, textvariable=tk.IntVar(self, self.DEFAULT_DELAY))
+        self._entry = tk.Entry(master=self, width=5, textvariable=tk.IntVar(self, self._dataObject.MoveSpeed))
         self._entry.pack(pady=5)
 
-        self._btn_update = tk.Button(master=self, text="Update delay", command=self._updateSpeed)
+        self._btn_update = tk.Button(master=self, text="Update speed", command=self._updateSpeed)
         self._btn_update.pack(pady=5)
 
     def _updateSpeed(self):

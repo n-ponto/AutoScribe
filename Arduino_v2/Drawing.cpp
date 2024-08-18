@@ -19,10 +19,6 @@ extern bool queueLowFlag;
 
 // #define VERBOSE_DEBUG
 
-#define SIGNAL_START_SENDING 0xFA
-#define SIGNAL_BUFFER_EMPTY 0xFF
-#define SIGNAL_DONE_DRAWING 0xAB
-
 #define SCRN_CRD_ROW 4  // Row on the screen to display the coordinates
 
 // Current state of the line drawing algorithm between calls to the drawing interrupt
@@ -244,7 +240,7 @@ void endDrawing() {
   digitalWrite(ENABLE_PIN, DISABLE_STEPPERS);  // Disable stepper motors
   penMove();                                   // Move the pen up
   setRuntimeMode(acceptingCommands);           // Return to Accepting Commands
-  Serial.write(SIGNAL_DONE_DRAWING);           // Send the end of drawing signal
+  Serial.write(DRAW_DONE);                     // Send the end of drawing signal
   // Clear the serial buffer
   while (Serial.available() > 0) {
     Serial.read();
@@ -268,10 +264,13 @@ void drawingLoop() {
   uint8_t buf_space = 0;
 
   // Wait for the signal to start accepting points
-  while (Serial.read() != SIGNAL_START_SENDING) {
+  lcdScreen.LCDgotoXY(0, SCRN_CRD_ROW - 1);
+  lcdScreen.LCDString("Waiting...");
+  while (Serial.read() != DRAW_START_SENDING) {
     delay(100);
   }
-  Serial.write(SIGNAL_START_SENDING);  // Signal to start sending points
+  lcdScreen.LCDClearBlock(SCRN_CRD_ROW - 1);
+  Serial.write(DRAW_START_SENDING);  // Signal to start sending points
 
   // Continue reading points over serial and appending to the queue
   while (continueDrawing) {
@@ -300,7 +299,7 @@ void drawingLoop() {
     more points and reset the space in the buffer. */
     if (buf_space >= bufferPts && Q_BUFSZ > queue.curSz + bufferPts) {
       buf_space = 0;
-      Serial.write(SIGNAL_BUFFER_EMPTY);
+      Serial.write(DRAW_BUFFER_EMPTY);
     }
 
     // While waiting for another point retransmit the send signal.
